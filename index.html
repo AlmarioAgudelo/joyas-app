@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joyas App - Gestión</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .bg-pino {
+            background-color: #014421 !important;
+        }
+
+        .btn-pino {
+            background-color: #014421 !important;
+            border-color: #014421 !important;
+            color: white !important;
+        }
+
+        .btn-pino:hover {
+            background-color: #016331 !important;
+        }
+
+        /* Imagen Cuadrada Proporcional */
+        .img-cuadrada {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .card-joya {
+            transition: transform 0.2s;
+            font-size: 0.85rem;
+            border: none;
+        }
+
+        .card-joya:hover {
+            transform: scale(1.03);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+        }
+
+        .nav-link.active {
+            color: white !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <div id="header-container"></div>
+
+    <div class="container">
+        <section id="vista-inventario">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Registrar Nueva Pieza</h5>
+                    <div class="row g-2">
+                        <div class="col-md-2"><input type="text" id="nombreJoya" class="form-control"
+                                placeholder="Nombre"></div>
+                        <div class="col-md-2">
+                            <select id="categoriaJoya" class="form-select">
+                                <option value="" selected disabled>Categoría</option>
+                                <option value="Cadena">Cadena</option>
+                                <option value="Aretes">Aretes</option>
+                                <option value="Pulseras">Pulseras</option>
+                                <option value="Balines">Balines</option>
+                                <option value="Herrajes">Herrajes</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3"><input type="text" id="imagenJoya" class="form-control"
+                                placeholder="URL de la imagen"></div>
+                        <div class="col-md-1"><input type="number" id="costoJoya" class="form-control"
+                                placeholder="Costo"></div>
+                        <div class="col-md-1"><input type="number" id="precioJoya" class="form-control"
+                                placeholder="Venta"></div>
+                        <div class="col-md-1"><input type="number" id="stockJoya" class="form-control"
+                                placeholder="Cant."></div>
+                        <div class="col-md-2"><button class="btn btn-pino w-100"
+                                onclick="agregarProducto()">Guardar</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
+                <h3>Inventario Disponible</h3>
+                <button class="btn btn-sm btn-outline-secondary" onclick="alternarCostos()">
+                    <span id="btnVisibilidad">👁️ Mostrar Costos</span>
+                </button>
+            </div>
+            <div class="row" id="contenedorInventario"></div>
+        </section>
+
+        <section id="vista-ventas" class="hidden">
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Datos del Cliente</h5>
+                            <input type="text" id="clienteNombre" class="form-control mb-2"
+                                placeholder="Nombre (Opcional)">
+                            <input type="text" id="clienteTel" class="form-control mb-3"
+                                placeholder="Teléfono (Opcional)">
+                            <hr>
+                            <h5 class="card-title">Agregar a la Venta</h5>
+                            <select id="seleccionarProducto" class="form-select mb-2"></select>
+                            <input type="number" id="ventaCantidad" class="form-control mb-2" value="1" min="1">
+                            <button class="btn btn-pino w-100" onclick="agregarAlCarrito()">Agregar al Carrito</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Carrito</h5>
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cant.</th>
+                                        <th>Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaCarrito"></tbody>
+                            </table>
+                            <h4 class="text-end" id="totalVenta">Total: $0</h4>
+                            <button class="btn btn-success w-100 mt-3" onclick="finalizarVenta()">Finalizar
+                                Venta</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="vista-historial" class="hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>Historial de Ventas</h3>
+                <div class="badge bg-pino p-2 fs-6" id="totalRecaudado">Total Recaudado: $0</div>
+            </div>
+            <div class="card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Productos</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaHistorial"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
