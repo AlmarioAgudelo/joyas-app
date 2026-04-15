@@ -3,7 +3,7 @@ let inventario = [];
 let carrito = [];
 let ventasRealizadas = [];
 
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz8Bdp7ft_bRkzWlWO1D3kN777_VtzMuy8BVHaRlyAsSPQlu1wB37yPdl9rI8Uf1GSesg/exec";
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzEf_X-ZRDPCuMO9g4BVIl-D4PwqU4st3agyKPrTxSXONG6cqYOukSpefjoI4-EYTLZLA/exec";
 
 // --- CARGA DE DATOS ---
 async function cargarDatos() {
@@ -106,15 +106,30 @@ function renderizarInventario() {
                 <p class="text-primary small mb-0">G: $${(precioNum - costoNum).toLocaleString()}</p>
             </div>` : '';
 
+        // Escapamos el nombre para evitar errores con comillas en el onclick
+        const nombreEscapado = joya.nombre.replace(/'/g, "\\'");
+
         contenedor.innerHTML += `
             <div class="col-6 col-md-3 mb-4">
-                <div class="card card-joya shadow-sm h-100">
+                <div class="card card-joya shadow-sm h-100 position-relative">
+                    <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                            onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')" 
+                            style="z-index: 10; padding: 2px 8px; border-radius: 50%;">
+                        &times;
+                    </button>
+                    
                     <img src="${urlImg}" class="img-cuadrada">
                     <div class="card-body text-center p-2">
                         <h6 class="mb-1 text-truncate">${joya.nombre}</h6>
                         ${htmlCosto}
                         <p class="text-muted mb-1 fw-bold">$${precioNum.toLocaleString()}</p>
-                        <p class="small mb-0 ${joya.stock < 5 ? 'text-danger' : 'text-success'}">Stock: ${joya.stock}</p>
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <p class="small mb-0 ${joya.stock < 5 ? 'text-danger' : 'text-success'}">Stock: ${joya.stock}</p>
+                            <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" 
+                                    onclick="sumarStock(${joya.id}, '${nombreEscapado}')">
+                                +
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>`;
@@ -207,6 +222,38 @@ async function cargarHeader() {
         const r = await fetch('header.html');
         document.getElementById('header-container').innerHTML = await r.text();
     } catch (e) { console.log(e); }
+}
+
+async function sumarStock(id, nombre) {
+    const cantidad = prompt(`¿Cuántas unidades de "${nombre}" quieres agregar al inventario?`);
+
+    // Validamos que sea un número válido
+    if (!cantidad || isNaN(cantidad) || parseInt(cantidad) <= 0) return;
+
+    if (confirm(`Se sumarán ${cantidad} unidades a ${nombre}. ¿Continuar?`)) {
+        const data = { tipo: "SUMAR_STOCK", id: id, cantidad: parseInt(cantidad) };
+
+        // Bloqueamos la pantalla un momento
+        document.body.style.cursor = 'wait';
+
+        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+
+        alert("Stock actualizado correctamente.");
+        location.reload();
+    }
+}
+
+async function eliminarProducto(id, nombre) {
+    if (confirm(`¿Estás SEGURO de eliminar "${nombre}"?\nEsta acción lo borrará permanentemente de la lista.`)) {
+        const data = { tipo: "ELIMINAR_PRODUCTO", id: id };
+
+        document.body.style.cursor = 'wait';
+
+        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+
+        alert("Producto eliminado.");
+        location.reload();
+    }
 }
 
 cargarHeader();
