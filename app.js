@@ -3,7 +3,7 @@ let inventario = [];
 let carrito = [];
 let ventasRealizadas = [];
 
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyvVuJ9zuLMiBcNqDMZ2N_VnA0ADYs6qKojdiZ-NeS3anBdQqKJMjuaXIbSmEt2--L4FA/exec";
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz8Bdp7ft_bRkzWlWO1D3kN777_VtzMuy8BVHaRlyAsSPQlu1wB37yPdl9rI8Uf1GSesg/exec";
 
 // --- CARGA DE DATOS ---
 async function cargarDatos() {
@@ -42,49 +42,45 @@ function cambiarVista(vista) {
 }
 
 function renderizarHistorial() {
-    const contenedor = document.getElementById('listaHistorial'); // Asegúrate que este ID exista en tu HTML
-    if (!contenedor) return;
-    contenedor.innerHTML = '';
+    const lista = document.getElementById('listaHistorial');
+    if (!lista) return;
+    lista.innerHTML = '';
 
-    // Mostramos las ventas de la más reciente a la más antigua
     [...ventasRealizadas].reverse().forEach(v => {
-        contenedor.innerHTML += `
-            <div class="card mb-2 shadow-sm">
-                <div class="card-body p-2">
-                    <div class="d-flex justify-content-between">
-                        <small class="text-muted">${v.fecha}</small>
-                        <span class="badge bg-success">$${parseInt(v.total).toLocaleString()}</span>
-                    </div>
-                    <p class="mb-0"><strong>${v.cliente}</strong> (${v.telefono || '---'})</p>
-                    <small class="text-secondary">${v.productos}</small>
-                </div>
-            </div>`;
+        lista.innerHTML += `
+            <tr>
+                <td style="font-size: 0.8rem;">${v.fecha}</td>
+                <td>
+                    <div class="fw-bold">${v.cliente}</div>
+                    <div class="text-muted small">${v.telefono || ''}</div>
+                </td>
+                <td class="small text-truncate" style="max-width: 200px;">${v.productos}</td>
+                <td class="text-end fw-bold">$${parseInt(v.total).toLocaleString()}</td>
+            </tr>`;
     });
 }
 
 // --- BALANCE (CORREGIDO MULTIPLICACIÓN) ---
 function calcularBalance() {
-    let invTotal = 0;
-    let ventasTotal = 0;
+    let invInversion = 0;
+    let totalVentas = 0;
+    let totalCostos = 0;
 
-    // Calcular valor del inventario actual
-    inventario.forEach(p => {
-        const costo = parseFloat(p.costo) || 0;
-        const stock = parseInt(p.stock) || 0;
-        invTotal += (costo * stock);
-    });
+    // Inversión en lo que hay en estantes
+    inventario.forEach(p => invInversion += (parseFloat(p.costo) || 0) * (parseInt(p.stock) || 0));
 
-    // Calcular total de ventas realizadas
+    // Totales de lo que ya se vendió
     ventasRealizadas.forEach(v => {
-        ventasTotal += parseFloat(v.total) || 0;
+        totalVentas += parseFloat(v.total) || 0;
+        totalCostos += parseFloat(v.costo) || 0; // Esta es la nueva columna
     });
 
-    // Actualizamos los textos en la pantalla de Balance
-    if (document.getElementById('balInversion')) {
-        document.getElementById('balInversion').innerText = `$${invTotal.toLocaleString()}`;
-        document.getElementById('balVentas').innerText = `$${ventasTotal.toLocaleString()}`;
-        // La ganancia real se calcula restando el costo de lo vendido (esto requiere una lógica más avanzada de costos, por ahora lo dejamos en ventas totales)
-    }
+    const ganancia = totalVentas - totalCostos;
+
+    document.getElementById('balInversion').innerText = `$${invInversion.toLocaleString()}`;
+    document.getElementById('balVentas').innerText = `$${totalVentas.toLocaleString()}`;
+    document.getElementById('balCostoVentas').innerText = `$${totalCostos.toLocaleString()}`;
+    document.getElementById('balGanancia').innerText = `$${ganancia.toLocaleString()}`;
 }
 
 // --- INVENTARIO ---
@@ -184,51 +180,26 @@ function eliminarItem(index) {
 let enviandoVenta = false; // 1. Variable para evitar duplicados
 
 async function finalizarVenta() {
-    if (carrito.length === 0) return alert("El carrito está vacío");
-    if (enviandoVenta) return; // Si ya se está enviando, no hagas nada
+    if (carrito.length === 0 || enviandoVenta) return;
 
-    const btnVenta = document.querySelector("button[onclick='finalizarVenta()']");
+    enviandoVenta = true;
+    const costoTotalVenta = carrito.reduce((s, i) => s + (i.costo * i.cantidad), 0);
+    const totalVenta = carrito.reduce((s, i) => s + (i.precioFinal * i.cantidad), 0);
 
-    try {
-        enviandoVenta = true;
-        if (btnVenta) {
-            btnVenta.disabled = true;
-            btnVenta.innerText = "Sincronizando... Espere";
-        }
+    const datosVenta = {
+        tipo: "VENTA",
+        fecha: new Date().toLocaleString(),
+        cliente: document.getElementById('clienteNombre').value || "General",
+        telefono: document.getElementById('clienteTel').value || "---",
+        productos: carrito.map(p => `${p.nombre} (x${p.cantidad})`).join(", "),
+        total: totalVenta,
+        costoTotal: costoTotalVenta, // Enviamos el costo para el balance
+        detalles: carrito.map(p => ({ id: p.id, cantidad: p.cantidad }))
+    };
 
-        const datosVenta = {
-            tipo: "VENTA",
-            fecha: new Date().toLocaleString(),
-            cliente: document.getElementById('clienteNombre').value || "General",
-            telefono: document.getElementById('clienteTel').value || "---", // 3. Se agregó el teléfono
-            productos: carrito.map(p => `${p.nombre} (x${p.cantidad})`).join(", "),
-            total: carrito.reduce((s, i) => s + (i.precioFinal * i.cantidad), 0),
-            // 2. IMPORTANTE: Enviamos los IDs para que Google reste el stock
-            detalles: carrito.map(p => ({
-                id: p.id,
-                cantidad: p.cantidad
-            }))
-        };
-
-        await fetch(URL_SCRIPT, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(datosVenta)
-        });
-
-        alert("¡Venta Exitosa! El inventario se actualizará en unos segundos.");
-        location.reload();
-
-    } catch (error) {
-        console.error("Error en la venta:", error);
-        alert("Hubo un error al conectar con Google Sheets.");
-    } finally {
-        enviandoVenta = false;
-        if (btnVenta) {
-            btnVenta.disabled = false;
-            btnVenta.innerText = "Finalizar Venta";
-        }
-    }
+    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datosVenta) });
+    alert("Venta Exitosa");
+    location.reload();
 }
 
 async function cargarHeader() {
