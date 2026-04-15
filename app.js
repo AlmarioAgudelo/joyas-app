@@ -3,7 +3,7 @@ let inventario = [];
 let carrito = [];
 let ventasRealizadas = [];
 
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycby7EXPbGEmS9IzcfL-Lao1IJfN7iPaY5HrGX0bhPv4e2uI_8LmY8WkAEqkRcdXT1pKenQ/exec";
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz80b7nZFGWXvlihG757qfziM44Rrax__ltvSgErQCSedWORaA10wALAIbis68I9Xy7/exec";
 
 // --- CARGA DE DATOS ---
 async function cargarDatos() {
@@ -150,18 +150,54 @@ function eliminarItem(index) {
     renderizarCarrito();
 }
 
+let enviandoVenta = false; // 1. Variable para evitar duplicados
+
 async function finalizarVenta() {
-    if (carrito.length === 0) return;
-    const datosVenta = {
-        tipo: "VENTA",
-        fecha: new Date().toLocaleString(),
-        cliente: document.getElementById('clienteNombre').value || "General",
-        productos: carrito.map(p => `${p.nombre} (x${p.cantidad})`).join(", "),
-        total: carrito.reduce((s, i) => s + (i.precioFinal * i.cantidad), 0)
-    };
-    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datosVenta) });
-    alert("Venta Exitosa");
-    location.reload();
+    if (carrito.length === 0) return alert("El carrito está vacío");
+    if (enviandoVenta) return; // Si ya se está enviando, no hagas nada
+
+    const btnVenta = document.querySelector("button[onclick='finalizarVenta()']");
+
+    try {
+        enviandoVenta = true;
+        if (btnVenta) {
+            btnVenta.disabled = true;
+            btnVenta.innerText = "Sincronizando... Espere";
+        }
+
+        const datosVenta = {
+            tipo: "VENTA",
+            fecha: new Date().toLocaleString(),
+            cliente: document.getElementById('clienteNombre').value || "General",
+            telefono: document.getElementById('clienteTel').value || "---", // 3. Se agregó el teléfono
+            productos: carrito.map(p => `${p.nombre} (x${p.cantidad})`).join(", "),
+            total: carrito.reduce((s, i) => s + (i.precioFinal * i.cantidad), 0),
+            // 2. IMPORTANTE: Enviamos los IDs para que Google reste el stock
+            detalles: carrito.map(p => ({
+                id: p.id,
+                cantidad: p.cantidad
+            }))
+        };
+
+        await fetch(URL_SCRIPT, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(datosVenta)
+        });
+
+        alert("¡Venta Exitosa! El inventario se actualizará en unos segundos.");
+        location.reload();
+
+    } catch (error) {
+        console.error("Error en la venta:", error);
+        alert("Hubo un error al conectar con Google Sheets.");
+    } finally {
+        enviandoVenta = false;
+        if (btnVenta) {
+            btnVenta.disabled = false;
+            btnVenta.innerText = "Finalizar Venta";
+        }
+    }
 }
 
 async function cargarHeader() {
