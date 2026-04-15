@@ -28,18 +28,31 @@ async function cargarDatos() {
 
 // --- NAVEGACIÓN ---
 function cambiarVista(vista) {
+    // 1. Mostrar/Ocultar las secciones
     document.getElementById('vista-inventario').classList.toggle('hidden', vista !== 'inventario');
     document.getElementById('vista-ventas').classList.toggle('hidden', vista !== 'ventas');
     document.getElementById('vista-historial').classList.toggle('hidden', vista !== 'historial');
+    // Añadimos la nueva vista de balance
+    const vistaBalance = document.getElementById('vista-balance');
+    if (vistaBalance) vistaBalance.classList.toggle('hidden', vista !== 'balance');
 
-    const links = ["inv", "ventas", "historial"];
+    // 2. Actualizar los botones del menú (el estado "active")
+    // Añadimos "balance" a la lista de links
+    const links = ["inv", "ventas", "historial", "balance"];
     links.forEach(l => {
         const el = document.getElementById(`btn-vista-${l}`);
-        if (el) el.classList.toggle('active', vista === (l === "inv" ? "inventario" : l));
+        if (el) {
+            // Comparamos si el botón actual coincide con la vista seleccionada
+            const esActivo = vista === (l === "inv" ? "inventario" : l);
+            el.classList.toggle('active', esActivo);
+        }
     });
 
+    // 3. Cargar datos específicos de cada vista
     if (vista === 'ventas') cargarSelectProductos();
     if (vista === 'historial') renderizarHistorial();
+    // Cuando entres a balance, que ejecute los cálculos
+    if (vista === 'balance') calcularBalance();
 }
 
 // --- INVENTARIO ---
@@ -248,3 +261,30 @@ async function cargarHeader() {
 // Ejecución al iniciar
 cargarHeader();
 cargarDatos(); // Trae todo de Google Sheets al abrir
+function calcularBalance() {
+    // 1. Calcular Inversión en Inventario (Lo que tienes en estantes)
+    let invTotal = inventario.reduce((acc, p) => acc + (parseFloat(p.costo || 0) * parseInt(p.stock || 0)), 0);
+
+    // 2. Calcular Ventas y Ganancias desde el Historial
+    // Nota: Necesitas que tu Google Sheets también te devuelva el historial de ventas
+    // Si aún no lo descargas, usaremos los datos locales de la sesión:
+    let ventasTotales = 0;
+    let costoDeVentas = 0;
+
+    ventasRealizadas.forEach(v => {
+        ventasTotales += parseFloat(v.total || 0);
+        // Aquí sumamos el costo de cada producto vendido
+        v.productos.forEach(p => {
+            // Buscamos el costo original del producto
+            costoDeVentas += (parseFloat(p.costo || 0) * parseInt(p.cantidad || 0));
+        });
+    });
+
+    let gananciaNeta = ventasTotales - costoDeVentas;
+
+    // Mostrar en pantalla
+    document.getElementById('balInversion').innerText = `$${invTotal.toLocaleString()}`;
+    document.getElementById('balVentas').innerText = `$${ventasTotales.toLocaleString()}`;
+    document.getElementById('balCostoVentas').innerText = `$${costoDeVentas.toLocaleString()}`;
+    document.getElementById('balGanancia').innerText = `$${gananciaNeta.toLocaleString()}`;
+}
