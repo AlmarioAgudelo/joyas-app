@@ -124,18 +124,28 @@ function cargarSelectProductos() {
 function agregarAlCarrito() {
     const id = parseInt(document.getElementById('seleccionarProducto').value);
     const cant = parseInt(document.getElementById('ventaCantidad').value);
+    const precioRegateo = parseInt(document.getElementById('precioRegateo').value);
     const producto = inventario.find(p => p.id == id);
 
     if (!producto || isNaN(cant)) return alert("Elige producto y cantidad");
     if (cant > producto.stock) return alert("Stock insuficiente");
 
-    const yaEsta = carrito.find(c => c.id == id);
+    // Si escribiste un precio en el nuevo campo, usamos ese. Si no, usamos el del inventario.
+    const precioFinal = !isNaN(precioRegateo) ? precioRegateo : producto.precio;
+
+    // Buscamos si ya está en el carrito para no repetir filas
+    const yaEsta = carrito.find(c => c.id == id && c.precioFinal === precioFinal);
+
     if (yaEsta) {
         if (yaEsta.cantidad + cant > producto.stock) return alert("No hay más stock");
         yaEsta.cantidad += cant;
     } else {
-        carrito.push({ ...producto, cantidad: cant });
+        // Guardamos el precioFinal en el objeto del carrito
+        carrito.push({ ...producto, cantidad: cant, precioFinal: precioFinal });
     }
+
+    // Limpiar el campo de regateo para la siguiente joya
+    document.getElementById('precioRegateo').value = '';
     renderizarCarrito();
 }
 
@@ -143,11 +153,17 @@ function renderizarCarrito() {
     const lista = document.getElementById('listaCarrito');
     let total = 0;
     lista.innerHTML = '';
+
     carrito.forEach((item, index) => {
-        const sub = item.precio * item.cantidad;
+        // Usamos precioFinal en lugar de item.precio
+        const sub = item.precioFinal * item.cantidad;
         total += sub;
+
         lista.innerHTML += `<tr>
-            <td>${item.nombre}</td>
+            <td>
+                ${item.nombre}
+                <br><small class="text-muted">Unit: $${item.precioFinal.toLocaleString()}</small>
+            </td>
             <td>${item.cantidad}</td>
             <td>$${sub.toLocaleString()}</td>
             <td><button class="btn btn-sm btn-link text-danger" onclick="eliminarItem(${index})">x</button></td>
@@ -173,9 +189,10 @@ async function finalizarVenta() {
         fecha: new Date().toLocaleString(),
         cliente: cliente,
         telefono: tel,
-        productos: carrito.map(p => `${p.nombre} (x${p.cantidad})`).join(", "),
+        // Aquí detallamos el precio cobrado en el texto que va a Google Sheets
+        productos: carrito.map(p => `${p.nombre} (x${p.cantidad}) a $${p.precioFinal}`).join(", "),
         total: total,
-        itemsCarrito: carrito // Necesario para que el script reste el stock
+        itemsCarrito: carrito
     };
 
     // Enviar a la nube
