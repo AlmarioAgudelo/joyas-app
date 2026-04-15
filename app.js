@@ -3,15 +3,20 @@ let inventario = [];
 let carrito = [];
 let ventasRealizadas = [];
 
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz80b7nZFGWXvlihG757qfziM44Rrax__ltvSgErQCSedWORaA10wALAIbis68I9Xy7/exec";
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyvVuJ9zuLMiBcNqDMZ2N_VnA0ADYs6qKojdiZ-NeS3anBdQqKJMjuaXIbSmEt2--L4FA/exec";
 
 // --- CARGA DE DATOS ---
 async function cargarDatos() {
     try {
         const respuesta = await fetch(URL_SCRIPT);
         const datos = await respuesta.json();
-        inventario = datos;
+
+        inventario = datos.inventario; // Guardamos inventario
+        ventasRealizadas = datos.ventas; // Guardamos historial
+
         renderizarInventario();
+        renderizarHistorial(); // Nueva función
+        calcularBalance();      // Para que los números se actualicen
     } catch (error) {
         console.error("Error cargando datos:", error);
     }
@@ -36,24 +41,50 @@ function cambiarVista(vista) {
     if (vista === 'balance') calcularBalance();
 }
 
+function renderizarHistorial() {
+    const contenedor = document.getElementById('listaHistorial'); // Asegúrate que este ID exista en tu HTML
+    if (!contenedor) return;
+    contenedor.innerHTML = '';
+
+    // Mostramos las ventas de la más reciente a la más antigua
+    [...ventasRealizadas].reverse().forEach(v => {
+        contenedor.innerHTML += `
+            <div class="card mb-2 shadow-sm">
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">${v.fecha}</small>
+                        <span class="badge bg-success">$${parseInt(v.total).toLocaleString()}</span>
+                    </div>
+                    <p class="mb-0"><strong>${v.cliente}</strong> (${v.telefono || '---'})</p>
+                    <small class="text-secondary">${v.productos}</small>
+                </div>
+            </div>`;
+    });
+}
+
 // --- BALANCE (CORREGIDO MULTIPLICACIÓN) ---
 function calcularBalance() {
     let invTotal = 0;
+    let ventasTotal = 0;
 
-    // Multiplicamos costo por cantidad de cada producto
+    // Calcular valor del inventario actual
     inventario.forEach(p => {
         const costo = parseFloat(p.costo) || 0;
         const stock = parseInt(p.stock) || 0;
         invTotal += (costo * stock);
     });
 
-    // Actualizamos la vista
-    document.getElementById('balInversion').innerText = `$${invTotal.toLocaleString()}`;
+    // Calcular total de ventas realizadas
+    ventasRealizadas.forEach(v => {
+        ventasTotal += parseFloat(v.total) || 0;
+    });
 
-    // Estos se llenarán cuando implementemos la descarga del historial
-    document.getElementById('balVentas').innerText = `$0`;
-    document.getElementById('balCostoVentas').innerText = `$0`;
-    document.getElementById('balGanancia').innerText = `$0`;
+    // Actualizamos los textos en la pantalla de Balance
+    if (document.getElementById('balInversion')) {
+        document.getElementById('balInversion').innerText = `$${invTotal.toLocaleString()}`;
+        document.getElementById('balVentas').innerText = `$${ventasTotal.toLocaleString()}`;
+        // La ganancia real se calcula restando el costo de lo vendido (esto requiere una lógica más avanzada de costos, por ahora lo dejamos en ventas totales)
+    }
 }
 
 // --- INVENTARIO ---
