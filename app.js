@@ -3,7 +3,7 @@ let inventario = [];
 let carrito = [];
 let ventasRealizadas = [];
 
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzEf_X-ZRDPCuMO9g4BVIl-D4PwqU4st3agyKPrTxSXONG6cqYOukSpefjoI4-EYTLZLA/exec";
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbwOUW5kZNQkS9UasCbSN-d5kEcwrTcnYHVj64ZovFtmaI9ITDQIPlktB8EZOoJPr8D-sg/exec";
 
 // --- CARGA DE DATOS ---
 async function cargarDatos() {
@@ -95,61 +95,86 @@ function renderizarInventario() {
     if (!contenedor) return;
     contenedor.innerHTML = '';
 
-    inventario.forEach(joya => {
-        const costoNum = parseInt(joya.costo) || 0;
-        const precioNum = parseInt(joya.precio) || 0;
-        const urlImg = joya.imagen || "https://via.placeholder.com/400?text=Joyas";
+    // 1. Obtener materiales únicos (Ej: ["Oro Laminado", "Plata Ley 925"])
+    const materiales = [...new Set(inventario.map(j => j.material || "Sin Clasificar"))];
 
-        const htmlCosto = mostrarCostos ? `
-            <div class="bg-light rounded p-1 mb-2">
-                <p class="text-danger small mb-0">C: $${costoNum.toLocaleString()}</p>
-                <p class="text-primary small mb-0">G: $${(precioNum - costoNum).toLocaleString()}</p>
-            </div>` : '';
-
-        // Escapamos el nombre para evitar errores con comillas en el onclick
-        const nombreEscapado = joya.nombre.replace(/'/g, "\\'");
-
+    materiales.forEach(mat => {
+        // Añadir encabezado de sección
         contenedor.innerHTML += `
-            <div class="col-6 col-md-3 mb-4">
-                <div class="card card-joya shadow-sm h-100 position-relative">
-                    <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
-                            onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')" 
-                            style="z-index: 10; padding: 2px 8px; border-radius: 50%;">
-                        &times;
-                    </button>
-                    
-                    <img src="${urlImg}" class="img-cuadrada">
-                    <div class="card-body text-center p-2">
-                        <h6 class="mb-1 text-truncate">${joya.nombre}</h6>
-                        ${htmlCosto}
-                        <p class="text-muted mb-1 fw-bold">$${precioNum.toLocaleString()}</p>
-                        <div class="d-flex align-items-center justify-content-center gap-2">
-                            <p class="small mb-0 ${joya.stock < 5 ? 'text-danger' : 'text-success'}">Stock: ${joya.stock}</p>
-                            <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" 
-                                    onclick="sumarStock(${joya.id}, '${nombreEscapado}')">
-                                +
-                            </button>
+            <div class="col-12 mt-4 mb-2">
+                <h4 class="text-uppercase fw-bold border-bottom pb-2" style="color: #014421;">
+                    ✨ ${mat}
+                </h4>
+            </div>`;
+
+        // Filtrar joyas de este material
+        const joyasFiltradas = inventario.filter(j => (j.material || "Sin Clasificar") === mat);
+
+        joyasFiltradas.forEach(joya => {
+            const costoNum = parseInt(joya.costo) || 0;
+            const precioNum = parseInt(joya.precio) || 0;
+            const urlImg = joya.imagen || "https://via.placeholder.com/400?text=Joyas";
+            const nombreEscapado = joya.nombre.replace(/'/g, "\\'");
+
+            const htmlCosto = mostrarCostos ? `
+                <div class="bg-light rounded p-1 mb-2">
+                    <p class="text-danger small mb-0">C: $${costoNum.toLocaleString()}</p>
+                    <p class="text-primary small mb-0">G: $${(precioNum - costoNum).toLocaleString()}</p>
+                </div>` : '';
+
+            contenedor.innerHTML += `
+                <div class="col-6 col-md-3 mb-4">
+                    <div class="card card-joya shadow-sm h-100 position-relative">
+                        <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                                onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')" 
+                                style="z-index: 10; padding: 2px 8px; border-radius: 50%;">
+                            &times;
+                        </button>
+                        <img src="${urlImg}" class="img-cuadrada">
+                        <div class="card-body text-center p-2">
+                            <h6 class="mb-1 text-truncate">${joya.nombre}</h6>
+                            <small class="text-muted d-block mb-1">${joya.categoria}</small>
+                            ${htmlCosto}
+                            <p class="text-muted mb-1 fw-bold">$${precioNum.toLocaleString()}</p>
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <p class="small mb-0 ${joya.stock < 5 ? 'text-danger' : 'text-success'}">Stock: ${joya.stock}</p>
+                                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" 
+                                        onclick="sumarStock(${joya.id}, '${nombreEscapado}')">
+                                    +
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>`;
+                </div>`;
+        });
     });
 }
 
 async function agregarProducto() {
     const nombre = document.getElementById('nombreJoya').value;
     const categoria = document.getElementById('categoriaJoya').value;
+    const material = document.getElementById('materialJoya').value; // Nuevo
     const imagen = document.getElementById('imagenJoya').value;
     const costo = parseInt(document.getElementById('costoJoya').value);
     const precio = parseInt(document.getElementById('precioJoya').value);
     const stock = parseInt(document.getElementById('stockJoya').value);
 
-    if (nombre && categoria && !isNaN(costo) && !isNaN(precio) && !isNaN(stock)) {
-        const nuevo = { tipo: "NUEVO_PRODUCTO", id: Date.now(), nombre, categoria, costo, precio, stock, imagen };
+    if (nombre && categoria && material && !isNaN(costo) && !isNaN(precio) && !isNaN(stock)) {
+        const nuevo = { 
+            tipo: "NUEVO_PRODUCTO", 
+            id: Date.now(), 
+            nombre, 
+            categoria, 
+            material, // Nuevo
+            costo, 
+            precio, 
+            stock, 
+            imagen 
+        };
         await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevo) });
         alert("Guardado.");
         location.reload();
-    } else { alert("Faltan datos."); }
+    } else { alert("Faltan datos (incluyendo el Material)."); }
 }
 
 // --- VENTAS ---
