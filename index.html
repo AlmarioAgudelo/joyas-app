@@ -21,7 +21,6 @@
             background-color: #016331 !important;
         }
 
-        /* Imagen Cuadrada Proporcional */
         .img-cuadrada {
             width: 100%;
             aspect-ratio: 1 / 1;
@@ -56,9 +55,7 @@
 </head>
 
 <body class="bg-light">
-
     <div id="header-container"></div>
-
     <div class="container">
         <section id="vista-inventario">
             <div class="card shadow-sm mb-4">
@@ -90,19 +87,8 @@
                     </div>
                 </div>
             </div>
-
             <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
                 <h3>Inventario Disponible</h3>
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <div class="card bg-pino text-white shadow-sm">
-                            <div class="card-body p-2 text-center">
-                                <small class="d-block">Inversión Total (Costo)</small>
-                                <h4 class="mb-0" id="totalInversionInventario">$0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <button class="btn btn-sm btn-outline-secondary" onclick="alternarCostos()">
                     <span id="btnVisibilidad">👁️ Mostrar Costos</span>
                 </button>
@@ -115,49 +101,42 @@
                 <div class="col-md-5">
                     <div class="card shadow-sm mb-4">
                         <div class="card-body">
-                            <h5 class="card-title">Datos del Cliente</h5>
-                            <input type="text" id="clienteNombre" class="form-control mb-2"
-                                placeholder="Nombre (Opcional)">
-                            <input type="text" id="clienteTel" class="form-control mb-3"
-                                placeholder="Teléfono (Opcional)">
+                            <h5>Datos del Cliente</h5>
+                            <input type="text" id="clienteNombre" class="form-control mb-2" placeholder="Nombre">
+                            <input type="text" id="clienteTel" class="form-control mb-3" placeholder="Teléfono">
                             <hr>
-                            <h5 class="card-title">Agregar a la Venta</h5>
+                            <h5>Agregar a la Venta</h5>
                             <select id="seleccionarProducto" class="form-select mb-2"></select>
-
                             <div class="row g-2 mb-2">
                                 <div class="col-6">
                                     <label class="small text-muted">Cantidad</label>
                                     <input type="number" id="ventaCantidad" class="form-control" value="1" min="1">
                                 </div>
                                 <div class="col-6">
-                                    <label class="small text-muted">Precio Acordado</label>
+                                    <label class="small text-muted">Precio Regateo</label>
                                     <input type="number" id="precioRegateo" class="form-control" placeholder="$">
                                 </div>
                             </div>
-
                             <button class="btn btn-pino w-100" onclick="agregarAlCarrito()">Agregar al Carrito</button>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-7">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Carrito</h5>
-                            <table class="table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th>Cant.</th>
-                                        <th>Subtotal</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="listaCarrito"></tbody>
-                            </table>
-                            <h4 class="text-end" id="totalVenta">Total: $0</h4>
-                            <button class="btn btn-success w-100 mt-3" onclick="finalizarVenta()">Finalizar
-                                Venta</button>
-                        </div>
+                    <div class="card shadow-sm p-3">
+                        <h5>Carrito</h5>
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cant.</th>
+                                    <th>Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaCarrito"></tbody>
+                        </table>
+                        <h4 class="text-end" id="totalVenta">Total: $0</h4>
+                        <button class="btn btn-success w-100 mt-3" onclick="finalizarVenta()">Finalizar Venta</button>
                     </div>
                 </div>
             </div>
@@ -166,7 +145,6 @@
         <section id="vista-historial" class="hidden">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3>Historial de Ventas</h3>
-                <div class="badge bg-pino p-2 fs-6" id="totalRecaudado">Total Recaudado: $0</div>
             </div>
             <div class="card shadow-sm">
                 <div class="table-responsive">
@@ -186,43 +164,35 @@
         </section>
 
         <section id="vista-balance" class="hidden">
+            <h3 class="mb-4">Resumen Financiero</h3>
             <div class="row g-3">
                 <div class="col-md-3">
-                    <div class="card bg-pino text-white shadow-sm border-0">
-                        <div class="card-body text-center">
-                            <small>Inversión en Inventario</small>
-                            <h3 id="balInversion">$0</h3>
-                        </div>
+                    <div class="card bg-pino text-white shadow-sm border-0 p-3">
+                        <small>Inversión en Inventario</small>
+                        <h3 id="balInversion">$0</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-success text-white shadow-sm border-0">
-                        <div class="card-body text-center">
-                            <small>Ventas Totales</small>
-                            <h3 id="balVentas">$0</h3>
-                        </div>
+                    <div class="card bg-success text-white shadow-sm border-0 p-3">
+                        <small>Ventas Totales</small>
+                        <h3 id="balVentas">$0</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-secondary text-white shadow-sm border-0">
-                        <div class="card-body text-center">
-                            <small>Costo de Ventas</small>
-                            <h3 id="balCostoVentas">$0</h3>
-                        </div>
+                    <div class="card bg-secondary text-white shadow-sm border-0 p-3">
+                        <small>Costo de lo Vendido</small>
+                        <h3 id="balCostoVentas">$0</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-primary text-white shadow-sm border-0">
-                        <div class="card-body text-center">
-                            <small>Ganancia Real</small>
-                            <h3 id="balGanancia">$0</h3>
-                        </div>
+                    <div class="card bg-primary text-white shadow-sm border-0 p-3">
+                        <small>Ganancia Real</small>
+                        <h3 id="balGanancia">$0</h3>
                     </div>
                 </div>
             </div>
         </section>
     </div>
-
     <script src="app.js"></script>
 </body>
 

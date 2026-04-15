@@ -1,18 +1,29 @@
 <nav class="navbar navbar-expand navbar-dark bg-pino mb-4">
     <div class="container">
-        <span class="navbar-brand mb-0 h1">Joyas App</span>
+        <a class="navbar-brand mb-0 h1" onclick="cambiarVista('inventario')" style="cursor: pointer;">
+            Joyas App
+        </a>
+
         <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-                <a class="nav-link active" id="btn-vista-inv" onclick="cambiarVista('inventario')">Inventario</a>
+                <a class="nav-link active" id="btn-vista-inv" onclick="cambiarVista('inventario')">
+                    Inventario
+                </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="btn-vista-ventas" onclick="cambiarVista('ventas')">Vender</a>
+                <a class="nav-link" id="btn-vista-ventas" onclick="cambiarVista('ventas')">
+                    Vender
+                </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="btn-vista-historial" onclick="cambiarVista('historial')">Historial</a>
+                <a class="nav-link" id="btn-vista-historial" onclick="cambiarVista('historial')">
+                    Historial
+                </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" onclick="cambiarVista('balance')" id="btn-vista-balance">💰 Balance</a>
+                <a class="nav-link" id="btn-vista-balance" onclick="cambiarVista('balance')">
+                    💰 Balance
+                </a>
             </li>
         </ul>
     </div>
