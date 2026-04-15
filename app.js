@@ -51,15 +51,24 @@ function alternarCostos() {
 
 function renderizarInventario() {
     const contenedor = document.getElementById('contenedorInventario');
+    const displayTotalInversion = document.getElementById('totalInversionInventario');
     if (!contenedor) return;
+
     contenedor.innerHTML = '';
+    let inversionTotal = 0; // Aquí sumaremos todo
 
     inventario.forEach(joya => {
+        // --- Cálculo de Inversión ---
+        // Multiplicamos el costo por el stock actual de cada joya
+        const costoNum = parseInt(joya.costo) || 0;
+        const stockNum = parseInt(joya.stock) || 0;
+        inversionTotal += (costoNum * stockNum);
+
         const urlImg = joya.imagen || "https://via.placeholder.com/400?text=Joyas";
         const htmlCosto = mostrarCostos ? `
             <div class="bg-light rounded p-1 mb-2">
-                <p class="text-danger small mb-0">C: $${parseInt(joya.costo).toLocaleString()}</p>
-                <p class="text-primary small mb-0">G: $${(parseInt(joya.precio) - parseInt(joya.costo)).toLocaleString()}</p>
+                <p class="text-danger small mb-0">C: $${costoNum.toLocaleString()}</p>
+                <p class="text-primary small mb-0">G: $${(parseInt(joya.precio) - costoNum).toLocaleString()}</p>
             </div>` : '';
 
         contenedor.innerHTML += `
@@ -75,6 +84,11 @@ function renderizarInventario() {
                 </div>
             </div>`;
     });
+
+    // Mostramos el resultado final en la tarjeta que creamos
+    if (displayTotalInversion) {
+        displayTotalInversion.innerText = `$${inversionTotal.toLocaleString()}`;
+    }
 }
 
 async function agregarProducto() {
