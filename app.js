@@ -5,7 +5,7 @@ let inventario = [];
 let carrito = [];
 let ventasRealizadas = [];
 
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbwOUW5kZNQkS9UasCbSN-d5kEcwrTcnYHVj64ZovFtmaI9ITDQIPlktB8EZOoJPr8D-sg/exec";
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbyar8NXoYsaCMvvk9Omc7lR1-4G-XepOEspyFSsfSqBFvNgQ6jYq8oe3YlaNWi_lmyiWg/exec";
 
 // --- CARGA DE DATOS ---
 async function cargarDatos() {
@@ -151,16 +151,19 @@ function renderizarInventario() {
                             <p class="text-muted mb-1 fw-bold">$${precioNum.toLocaleString()}</p>
                             <div class="d-flex align-items-center justify-content-center gap-2">
                                 ${!esCliente ? `
-                                    <p class="small mb-0 ${joya.stock < 5 ? 'text-danger' : 'text-success'}">Stock: ${joya.stock}</p>
-                                    <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" 
-                                            onclick="sumarStock(${joya.id}, '${nombreEscapado}')">
-                                        +
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" 
-                                            onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')">
-                                        &times;
-                                    </button>
-                                ` : ''}
+    <button class="btn btn-sm btn-outline-warning py-0 px-2 fw-bold" 
+            onclick="prepararEdicion(${joya.id})">
+        ✏️
+    </button>
+    <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" 
+            onclick="sumarStock(${joya.id}, '${nombreEscapado}')">
+        +
+    </button>
+    <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" 
+            onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')">
+        &times;
+    </button>
+` : ''}
                             </div>
                         </div>
                     </div>
@@ -172,28 +175,63 @@ function renderizarInventario() {
 async function agregarProducto() {
     const nombre = document.getElementById('nombreJoya').value;
     const categoria = document.getElementById('categoriaJoya').value;
-    const material = document.getElementById('materialJoya').value; // Nuevo
-    const imagen = document.getElementById('imagenJoya').value;
+    const material = document.getElementById('materialJoya').value;
+    const fileInput = document.getElementById('imagenJoya');
     const costo = parseInt(document.getElementById('costoJoya').value);
     const precio = parseInt(document.getElementById('precioJoya').value);
     const stock = parseInt(document.getElementById('stockJoya').value);
 
-    if (nombre && categoria && material && !isNaN(costo) && !isNaN(precio) && !isNaN(stock)) {
+    // Validación básica
+    if (!nombre || !categoria || !material || isNaN(costo) || isNaN(precio) || isNaN(stock)) {
+        return alert("Faltan datos (incluyendo el Material).");
+    }
+
+    // Función para convertir archivo a Base64
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
+    let imagenData = "https://via.placeholder.com/400?text=Joyas"; // Imagen por defecto
+
+    try {
+        // Si el usuario seleccionó un archivo, lo convertimos
+        if (fileInput.files.length > 0) {
+            imagenData = await toBase64(fileInput.files[0]);
+        }
+
         const nuevo = {
             tipo: "NUEVO_PRODUCTO",
             id: Date.now(),
             nombre,
             categoria,
-            material, // Nuevo
+            material,
             costo,
             precio,
             stock,
-            imagen
+            imagen: imagenData
         };
-        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevo) });
-        alert("Guardado.");
+
+        // Bloqueamos el botón o mostramos un mensaje de espera
+        document.body.style.cursor = 'wait';
+
+        await fetch(URL_SCRIPT, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(nuevo)
+        });
+
+        alert("Producto guardado con éxito.");
         location.reload();
-    } else { alert("Faltan datos (incluyendo el Material)."); }
+
+    } catch (error) {
+        console.error("Error al procesar la imagen:", error);
+        alert("Hubo un error al subir la imagen.");
+    } finally {
+        document.body.style.cursor = 'default';
+    }
 }
 
 // --- VENTAS ---
@@ -298,6 +336,68 @@ async function eliminarProducto(id, nombre) {
         alert("Producto eliminado.");
         location.reload();
     }
+}
+let editandoId = null; // Variable para saber si estamos editando
+
+function prepararEdicion(id) {
+    const joya = inventario.find(j => j.id == id);
+    if (!joya) return;
+
+    // Llenamos el formulario con los datos actuales
+    document.getElementById('nombreJoya').value = joya.nombre;
+    document.getElementById('categoriaJoya').value = joya.categoria;
+    document.getElementById('materialJoya').value = joya.material;
+    document.getElementById('costoJoya').value = joya.costo;
+    document.getElementById('precioJoya').value = joya.precio;
+    document.getElementById('stockJoya').value = joya.stock;
+
+    // Cambiamos el comportamiento del botón
+    editandoId = id;
+    const btn = document.getElementById('btnGuardar');
+    btn.innerText = "Actualizar";
+    btn.classList.replace('btn-pino', 'btn-warning');
+    btn.onclick = ejecutarEdicion;
+
+    // Scroll hacia arriba para ver el formulario
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function ejecutarEdicion() {
+    if (!editandoId) return;
+
+    const fileInput = document.getElementById('imagenJoya');
+    const joyaActual = inventario.find(j => j.id == editandoId);
+
+    // Función para Base64 (la misma que ya tienes)
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
+    let imagenData = joyaActual.imagen; // Mantiene la anterior por defecto
+    if (fileInput.files.length > 0) {
+        imagenData = await toBase64(fileInput.files[0]);
+    }
+
+    const datosEditados = {
+        tipo: "EDITAR_PRODUCTO",
+        id: editandoId,
+        nombre: document.getElementById('nombreJoya').value,
+        categoria: document.getElementById('categoriaJoya').value,
+        material: document.getElementById('materialJoya').value,
+        costo: parseInt(document.getElementById('costoJoya').value),
+        precio: parseInt(document.getElementById('precioJoya').value),
+        stock: parseInt(document.getElementById('stockJoya').value),
+        imagen: imagenData
+    };
+
+    document.body.style.cursor = 'wait';
+    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datosEditados) });
+
+    alert("Producto actualizado.");
+    location.reload();
 }
 
 cargarHeader();
