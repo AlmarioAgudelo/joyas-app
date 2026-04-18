@@ -33,6 +33,9 @@ async function cargarDatos() {
 
 // --- NAVEGACIÓN ---
 function cambiarVista(vista) {
+    if (esCliente && vista !== 'inventario') return;
+
+    document.getElementById('vista-inventario').classList.toggle('hidden', vista !== 'inventario');
     document.getElementById('vista-inventario').classList.toggle('hidden', vista !== 'inventario');
     document.getElementById('vista-ventas').classList.toggle('hidden', vista !== 'ventas');
     document.getElementById('vista-historial').classList.toggle('hidden', vista !== 'historial');
@@ -104,7 +107,7 @@ function renderizarInventario() {
     if (!contenedor) return;
     contenedor.innerHTML = '';
 
-    // 1. Obtener materiales únicos (Ej: ["Oro Laminado", "Plata Ley 925"])
+    // 1. Obtener materiales únicos
     const materiales = [...new Set(inventario.map(j => j.material || "Sin Clasificar"))];
 
     materiales.forEach(mat => {
@@ -116,8 +119,14 @@ function renderizarInventario() {
                 </h4>
             </div>`;
 
-        // Filtrar joyas de este material
-        const joyasFiltradas = inventario.filter(j => (j.material || "Sin Clasificar") === mat);
+        // Filtrar joyas de este material (y ocultar stock 0 si es cliente)
+        const joyasFiltradas = inventario.filter(j => {
+            const coincideMaterial = (j.material || "Sin Clasificar") === mat;
+            if (esCliente) {
+                return coincideMaterial && (parseInt(j.stock) > 0);
+            }
+            return coincideMaterial;
+        });
 
         joyasFiltradas.forEach(joya => {
             const costoNum = parseInt(joya.costo) || 0;
@@ -141,18 +150,18 @@ function renderizarInventario() {
                             ${htmlCosto}
                             <p class="text-muted mb-1 fw-bold">$${precioNum.toLocaleString()}</p>
                             <div class="d-flex align-items-center justify-content-center gap-2">
-    <p class="small mb-0 ${joya.stock < 1 ? 'text-danger' : 'text-success'}">Stock: ${joya.stock}</p>
-    ${!esCliente ? `
-        <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" 
-                onclick="sumarStock(${joya.id}, '${nombreEscapado}')">
-            +
-        </button>
-        <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" 
-                onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')">
-            &times;
-        </button>
-    ` : ''}
-</div>
+                                ${!esCliente ? `
+                                    <p class="small mb-0 ${joya.stock < 5 ? 'text-danger' : 'text-success'}">Stock: ${joya.stock}</p>
+                                    <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" 
+                                            onclick="sumarStock(${joya.id}, '${nombreEscapado}')">
+                                        +
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" 
+                                            onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')">
+                                        &times;
+                                    </button>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>`;
