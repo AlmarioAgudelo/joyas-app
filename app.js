@@ -125,11 +125,6 @@ function renderizarInventario() {
             contenedor.innerHTML += `
                 <div class="col-6 col-md-3 mb-4">
                     <div class="card card-joya shadow-sm h-100 position-relative">
-                        <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
-                                onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')" 
-                                style="z-index: 10; padding: 2px 8px; border-radius: 50%;">
-                            &times;
-                        </button>
                         <img src="${urlImg}" class="img-cuadrada">
                         <div class="card-body text-center p-2">
                             <h6 class="mb-1 text-truncate">${joya.nombre}</h6>
@@ -141,6 +136,10 @@ function renderizarInventario() {
                                 <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" 
                                         onclick="sumarStock(${joya.id}, '${nombreEscapado}')">
                                     +
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" 
+                                        onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')">
+                                    &times;
                                 </button>
                             </div>
                         </div>
@@ -160,16 +159,16 @@ async function agregarProducto() {
     const stock = parseInt(document.getElementById('stockJoya').value);
 
     if (nombre && categoria && material && !isNaN(costo) && !isNaN(precio) && !isNaN(stock)) {
-        const nuevo = { 
-            tipo: "NUEVO_PRODUCTO", 
-            id: Date.now(), 
-            nombre, 
-            categoria, 
+        const nuevo = {
+            tipo: "NUEVO_PRODUCTO",
+            id: Date.now(),
+            nombre,
+            categoria,
             material, // Nuevo
-            costo, 
-            precio, 
-            stock, 
-            imagen 
+            costo,
+            precio,
+            stock,
+            imagen
         };
         await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevo) });
         alert("Guardado.");
