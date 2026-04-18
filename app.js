@@ -1,3 +1,5 @@
+const urlParams = new URLSearchParams(window.location.search);
+const esCliente = urlParams.get('vista') === 'cliente';
 let mostrarCostos = false;
 let inventario = [];
 let carrito = [];
@@ -15,6 +17,13 @@ async function cargarDatos() {
         ventasRealizadas = datos.ventas; // Guardamos historial
 
         renderizarInventario();
+        if (esCliente) {
+            if (document.getElementById('header-container')) document.getElementById('header-container').style.display = 'none';
+            const formRegistro = document.querySelector('#vista-inventario .card');
+            if (formRegistro) formRegistro.style.display = 'none';
+            const btnCostos = document.querySelector('button[onclick="alternarCostos()"]');
+            if (btnCostos) btnCostos.style.display = 'none';
+        }
         renderizarHistorial(); // Nueva función
         calcularBalance();      // Para que los números se actualicen
     } catch (error) {
@@ -132,16 +141,18 @@ function renderizarInventario() {
                             ${htmlCosto}
                             <p class="text-muted mb-1 fw-bold">$${precioNum.toLocaleString()}</p>
                             <div class="d-flex align-items-center justify-content-center gap-2">
-                                <p class="small mb-0 ${joya.stock < 5 ? 'text-danger' : 'text-success'}">Stock: ${joya.stock}</p>
-                                <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" 
-                                        onclick="sumarStock(${joya.id}, '${nombreEscapado}')">
-                                    +
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" 
-                                        onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')">
-                                    &times;
-                                </button>
-                            </div>
+    <p class="small mb-0 ${joya.stock < 1 ? 'text-danger' : 'text-success'}">Stock: ${joya.stock}</p>
+    ${!esCliente ? `
+        <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" 
+                onclick="sumarStock(${joya.id}, '${nombreEscapado}')">
+            +
+        </button>
+        <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" 
+                onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')">
+            &times;
+        </button>
+    ` : ''}
+</div>
                         </div>
                     </div>
                 </div>`;
