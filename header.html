@@ -1,30 +1,31 @@
-<nav class="navbar navbar-expand navbar-dark bg-pino mb-4">
+<nav class="navbar navbar-expand-lg navbar-dark bg-corporativo shadow-sm mb-4">
     <div class="container">
-        <a class="navbar-brand mb-0 h1" onclick="cambiarVista('inventario')" style="cursor: pointer;">
-            Joyas App
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <img src="C:\Users\kevin\OneDrive\Desktop\Joyeria\joyas-app\img\LogoPng.png" alt="Logo" width="40" height="40"
+                class="d-inline-block align-text-top me-2 rounded">
+            <span class="fw-bold">Joyas App</span>
         </a>
 
-        <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-                <a class="nav-link active" id="btn-vista-inv" onclick="cambiarVista('inventario')">
-                    Inventario
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="btn-vista-ventas" onclick="cambiarVista('ventas')">
-                    Vender
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="btn-vista-historial" onclick="cambiarVista('historial')">
-                    Historial
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="btn-vista-balance" onclick="cambiarVista('balance')">
-                    Balance
-                </a>
-            </li>
-        </ul>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" id="btn-vista-inv" onclick="cambiarVista('inventario')">Inventario</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="btn-vista-ventas" onclick="cambiarVista('ventas')">Ventas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="btn-vista-historial" onclick="cambiarVista('historial')">Historial</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="btn-vista-balance" onclick="cambiarVista('balance')">Balance</a>
+                </li>
+            </ul>
+        </div>
     </div>
 </nav>
