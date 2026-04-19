@@ -6,7 +6,7 @@ let carrito = [];
 let ventasRealizadas = [];
 let editandoId = null; // Para saber si estamos editando
 
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz_tvlyX0mF0tTUw4L9fbejUwymy0WIRBIQRhhFWQVnPjcO8rxojHXiwly6itHXJhAouA/exec";
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxFLPJ70q39p8xChe6D7eM-fRo2Q8t_6cl_q5VqAdtQ0JekjGAmEWMtwYoRGCnaL7HqKQ/exec";
 
 // --- CARGA DE DATOS ---
 async function cargarDatos() {
@@ -182,6 +182,9 @@ async function ejecutarEdicion() {
     const precio = parseInt(document.getElementById('precioJoya').value);
     const stock = parseInt(document.getElementById('stockJoya').value);
 
+    // 1. Capturamos el nombre del archivo que pusiste en el cuadro de texto
+    const nombreArchivo = document.getElementById('imagenJoya').value;
+
     const editado = {
         tipo: "EDITAR_PRODUCTO",
         id: editandoId,
@@ -190,7 +193,9 @@ async function ejecutarEdicion() {
         material: document.getElementById('materialJoya').value,
         costo: costo,
         precio: precio,
-        stock: stock
+        stock: stock,
+        // 2. Si escribiste algo, le pone img/ adelante. Si está vacío, manda blanco
+        imagen: nombreArchivo ? "img/" + nombreArchivo : ""
     };
 
     document.body.style.cursor = 'wait';
@@ -203,7 +208,7 @@ async function agregarProducto() {
     const nombre = document.getElementById('nombreJoya').value;
     const categoria = document.getElementById('categoriaJoya').value;
     const material = document.getElementById('materialJoya').value;
-    const fileInput = document.getElementById('imagenJoya');
+    const nombreImagen = document.getElementById('imagenJoya').value; // El texto que escribas
     const costo = parseInt(document.getElementById('costoJoya').value);
     const precio = parseInt(document.getElementById('precioJoya').value);
     const stock = parseInt(document.getElementById('stockJoya').value);
@@ -212,36 +217,20 @@ async function agregarProducto() {
         return alert("Faltan datos.");
     }
 
-    const toBase64 = file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
+    // Si escribiste algo, le pone img/ adelante, si no, usa el placeholder
+    let imagenData = nombreImagen ? "img/" + nombreImagen : "https://via.placeholder.com/400?text=Joyas";
 
-    let imagenData = "https://via.placeholder.com/400?text=Joyas";
+    const nuevo = {
+        tipo: "NUEVO_PRODUCTO",
+        id: Date.now(),
+        nombre, categoria, material, costo, precio, stock,
+        imagen: imagenData
+    };
 
-    try {
-        if (fileInput.files.length > 0) {
-            imagenData = await toBase64(fileInput.files[0]);
-        }
-
-        const nuevo = {
-            tipo: "NUEVO_PRODUCTO",
-            id: Date.now(),
-            nombre, categoria, material, costo, precio, stock,
-            imagen: imagenData
-        };
-
-        document.body.style.cursor = 'wait';
-        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevo) });
-        alert("Producto guardado con éxito.");
-        location.reload();
-    } catch (error) {
-        alert("Hubo un error.");
-    } finally {
-        document.body.style.cursor = 'default';
-    }
+    document.body.style.cursor = 'wait';
+    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevo) });
+    alert("Producto guardado con éxito.");
+    location.reload();
 }
 
 // --- VENTAS Y OTROS (SIN CAMBIOS) ---
