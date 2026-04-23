@@ -120,30 +120,41 @@ function calcularBalance() {
     let totalCostosVendido = 0;
     let sumaGastos = 0;
 
-    // 1. Inversión Stock: Suma de (Costo * Stock) de lo que hay en estantes.
-    inventario.forEach(p => invInversion += (parseFloat(p.costo) || 0) * (parseInt(p.stock) || 0));
-
-    // 2. Ventas Totales y Costos de lo Vendido:
-    ventasRealizadas.forEach(v => {
-        totalVentasBrutas += parseFloat(v.total) || 0;       // El dinero total que entró de ventas
-        totalCostosVendido += parseFloat(v.costoTotal) || 0; // Lo que te costaron esas piezas vendidas
+    // 1. Inversión Stock Actual (Lo que tienes en estantes)
+    // Usamos parseFloat para asegurar que los números se sumen, no se concatenen
+    inventario.forEach(p => {
+        invInversion += (parseFloat(p.costo) || 0) * (parseInt(p.stock) || 0);
     });
 
-    // 3. Gastos: Suma de todos los gastos registrados (comida, transporte, etc.)
-    gastos.forEach(g => sumaGastos += parseFloat(g.monto) || 0);
+    // 2. Ventas y Costos de lo Vendido
+    ventasRealizadas.forEach(v => {
+        totalVentasBrutas += parseFloat(v.total) || 0;
+        // IMPORTANTE: Verificamos 'costototal' (en minúsculas porque el script lo convierte así)
+        totalCostosVendido += parseFloat(v.costototal) || parseFloat(v.costoTotal) || 0;
+    });
 
-    // 4. Ganancia Real: Ventas Totales - Costo de lo Vendido - Gastos
+    // 3. Gastos extras registrados
+    gastos.forEach(g => {
+        sumaGastos += parseFloat(g.monto) || 0;
+    });
+
+    // 4. OPERACIONES FINALES
+    // Ganancia = Todo lo que entró - lo que te costó fabricarlo - los gastos extras
     const gananciaReal = totalVentasBrutas - totalCostosVendido - sumaGastos;
 
-    // Actualizar la pantalla con tus definiciones
-    document.getElementById('balInversion').innerText = `$${invInversion.toLocaleString()}`;
-    document.getElementById('balVentas').innerText = `$${totalVentasBrutas.toLocaleString()}`;
-    document.getElementById('balCostoVentas').innerText = `$${totalCostosVendido.toLocaleString()}`;
-    document.getElementById('balGanancia').innerText = `$${gananciaReal.toLocaleString()}`;
+    // ACTUALIZACIÓN DE LA INTERFAZ
+    document.getElementById('balInversion').innerText = `$${Math.round(invInversion).toLocaleString()}`;
+    document.getElementById('balVentas').innerText = `$${Math.round(totalVentasBrutas).toLocaleString()}`;
+    document.getElementById('balCostoVentas').innerText = `$${Math.round(totalCostosVendido).toLocaleString()}`;
+    document.getElementById('balGanancia').innerText = `$${Math.round(gananciaReal).toLocaleString()}`;
 
-    // Color de la tarjeta según si hay ganancia o pérdida
+    // Color de la tarjeta de Ganancia
     const elGanancia = document.getElementById('balGanancia');
-    elGanancia.parentElement.className = gananciaReal < 0 ? "card p-4 bg-danger text-white text-center" : "card p-4 bg-primary text-white text-center";
+    if (elGanancia) {
+        elGanancia.parentElement.className = gananciaReal < 0 ?
+            "card p-4 bg-danger text-white text-center" :
+            "card p-4 bg-primary text-white text-center";
+    }
 }
 
 function alternarCostos() {
