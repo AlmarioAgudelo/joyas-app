@@ -269,10 +269,22 @@ function renderizarHistorial() {
     lista.innerHTML = '';
 
     [...ventasRealizadas].reverse().forEach(v => {
-        const partesFecha = String(v.fecha || '').split(',');
-        const dia = partesFecha[0] || '';
-        const hora = partesFecha[1] ? partesFecha[1].trim() : '';
-        const fechaHtml = hora ? `${dia}<br><small class="text-muted">${hora}</small>` : `${dia}`;
+        const fechaRaw = String(v.fecha || '').trim();
+        let dia = fechaRaw;
+        let hora = '';
+
+        if (fechaRaw.includes('T')) {
+            const partes = fechaRaw.split('T');
+            dia = partes[0] || '';
+            hora = partes[1] ? partes[1].replace(/\.\d+.*$/, '') : '';
+            hora = hora.slice(0, 5);
+        } else if (fechaRaw.includes(',')) {
+            const partesFecha = fechaRaw.split(',');
+            dia = partesFecha[0] || '';
+            hora = partesFecha[1] ? partesFecha[1].trim().slice(0, 5) : '';
+        }
+
+        const fechaHtml = hora ? `${dia} / ${hora}` : dia;
 
         lista.innerHTML += `
             <tr>
