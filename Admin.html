@@ -42,6 +42,21 @@
 <body class="bg-light">
     <div id="header-container"></div>
 
+    <div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+
+    <div class="modal fade" id="appModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-pino text-white">
+                    <h5 class="modal-title" id="appModalLabel">Aviso</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="appModalBody"></div>
+                <div class="modal-footer" id="appModalFooter"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="container mt-4">
         <section id="vista-inventario">
             <div class="card shadow-sm mb-4">
@@ -74,7 +89,7 @@
                         <div class="col-md-1"><input type="number" id="stockJoya" class="form-control"
                                 placeholder="Stock"></div>
                         <div class="col-md-1">
-                            <button class="btn btn-pino w-100" id="btnGuardar" onclick="agregarProducto()">OK</button>
+                            <button class="btn btn-pino w-100" id="btnGuardar" onclick="agregarProducto(this)">OK</button>
                         </div>
                     </div>
                 </div>
@@ -103,7 +118,7 @@
                                     placeholder="Cantidad">
                             </div>
                         </div>
-                        <button class="btn btn-pino w-100" onclick="agregarAlCarrito()">+ Carrito</button>
+                        <button class="btn btn-pino w-100" onclick="agregarAlCarrito(this)">+ Carrito</button>
                     </div>
                 </div>
                 <div class="col-md-8">
@@ -120,7 +135,7 @@
                         <h4 class="text-end" id="totalVentaDisplay">Total: $0</h4>
 
                         <h4 class="text-end" id="totalVenta">Total: $0</h4>
-                        <button class="btn btn-success w-100" onclick="finalizarVenta()">Cerrar Venta</button>
+                        <button class="btn btn-success w-100" onclick="finalizarVenta(this)">Cerrar Venta</button>
                     </div>
                 </div>
             </div>
@@ -165,7 +180,7 @@
                         <div class="input-group input-group-sm mb-2">
                             <span class="input-group-text">$</span>
                             <input type="number" id="gastoMonto" class="form-control" placeholder="Monto">
-                            <button class="btn btn-danger" onclick="agregarGasto()">Añadir</button>
+                            <button class="btn btn-danger" onclick="agregarGasto(this)">Añadir</button>
                         </div>
                         <small class="text-muted">Esto se descontará de las ventas y ganancias.</small>
                     </div>
@@ -221,7 +236,7 @@
                         <input type="number" id="gastoMonto" class="form-control" placeholder="Monto $">
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-danger w-100" onclick="agregarGasto()">Registrar Gasto</button>
+                        <button class="btn btn-danger w-100" onclick="agregarGasto(this)">Registrar Gasto</button>
                     </div>
                 </div>
             </div>
@@ -242,8 +257,8 @@
 
     </div>
 
-    <script src="Admin.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="Admin.js"></script>
 </body>
 
 </html>

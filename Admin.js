@@ -17,6 +17,133 @@ function parseNumber(value) {
     return parseFloat(normalized) || 0;
 }
 
+function mostrarToast(mensaje, tipo = 'success', duracion = 3500) {
+    const contenedor = document.getElementById('toast-container');
+    if (!contenedor) return;
+
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast align-items-center text-bg-${tipo} border-0 mb-2`;
+    toastEl.role = 'alert';
+    toastEl.ariaLive = 'assertive';
+    toastEl.ariaAtomic = 'true';
+    toastEl.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${mensaje}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+        </div>`;
+
+    contenedor.appendChild(toastEl);
+    const toast = new bootstrap.Toast(toastEl, { delay: duracion });
+    toast.show();
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
+
+function bloquearBoton(btn, texto) {
+    if (!btn) return;
+    if (!btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.classList.add('disabled');
+    btn.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${texto || btn.dataset.originalHtml}`;
+}
+
+function desbloquearBoton(btn) {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.classList.remove('disabled');
+    if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+}
+
+function mostrarModal({ title = 'Aviso', body = '', confirmText = 'Sí', cancelText = 'Cancelar' }) {
+    const modalEl = document.getElementById('appModal');
+    const titulo = document.getElementById('appModalLabel');
+    const contenido = document.getElementById('appModalBody');
+    const footer = document.getElementById('appModalFooter');
+    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+
+    titulo.innerText = title;
+    contenido.innerHTML = body;
+    footer.innerHTML = `
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">${cancelText}</button>
+        <button type="button" class="btn btn-primary btn-sm" id="appModalConfirmBtn">${confirmText}</button>`;
+
+    return new Promise(resolve => {
+        let confirmed = false;
+        const confirmBtn = document.getElementById('appModalConfirmBtn');
+
+        const cerrar = () => {
+            confirmBtn.removeEventListener('click', onConfirm);
+            modalEl.removeEventListener('hidden.bs.modal', onHidden);
+        };
+
+        const onConfirm = () => {
+            confirmed = true;
+            cerrar();
+            modal.hide();
+            resolve(true);
+        };
+
+        const onHidden = () => {
+            cerrar();
+            resolve(confirmed);
+        };
+
+        confirmBtn.addEventListener('click', onConfirm);
+        modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+        modal.show();
+    });
+}
+
+function mostrarEntrada({ title = 'Entrada', body = '', inputLabel = 'Valor', confirmText = 'Aceptar', cancelText = 'Cancelar' }) {
+    const modalEl = document.getElementById('appModal');
+    const titulo = document.getElementById('appModalLabel');
+    const contenido = document.getElementById('appModalBody');
+    const footer = document.getElementById('appModalFooter');
+    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+
+    titulo.innerText = title;
+    contenido.innerHTML = `
+        <p>${body}</p>
+        <div class="mb-3">
+            <label class="form-label">${inputLabel}</label>
+            <input type="number" min="1" class="form-control" id="appModalInput" />
+        </div>`;
+    footer.innerHTML = `
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">${cancelText}</button>
+        <button type="button" class="btn btn-primary btn-sm" id="appModalConfirmBtn">${confirmText}</button>`;
+
+    return new Promise(resolve => {
+        let confirmed = false;
+        const confirmBtn = document.getElementById('appModalConfirmBtn');
+
+        const cerrar = () => {
+            confirmBtn.removeEventListener('click', onConfirm);
+            modalEl.removeEventListener('hidden.bs.modal', onHidden);
+        };
+
+        const onConfirm = () => {
+            const value = document.getElementById('appModalInput').value;
+            if (!value || isNaN(value) || parseInt(value) <= 0) {
+                mostrarToast('Ingresa una cantidad válida.', 'warning');
+                return;
+            }
+            confirmed = true;
+            cerrar();
+            modal.hide();
+            resolve(parseInt(value));
+        };
+
+        const onHidden = () => {
+            cerrar();
+            if (!confirmed) resolve(null);
+        };
+
+        confirmBtn.addEventListener('click', onConfirm);
+        modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+        modal.show();
+    });
+}
+
 // --- CARGA DE DATOS ---
 async function cargarDatos() {
     try {
@@ -43,11 +170,15 @@ async function cargarDatos() {
     }
 }
 
-async function agregarGasto() {
+async function agregarGasto(btn) {
     const desc = document.getElementById('gastoDesc').value;
     const monto = parseInt(document.getElementById('gastoMonto').value);
 
-    if (!desc || isNaN(monto)) return alert("Pon una descripción y el monto del gasto.");
+    if (!desc || isNaN(monto)) {
+        mostrarToast("Pon una descripción y el monto del gasto.", 'warning');
+        return;
+    }
+    if (btn) bloquearBoton(btn, 'Guardando...');
 
     const nuevoGasto = {
         tipo: "NUEVO_GASTO",
@@ -58,9 +189,16 @@ async function agregarGasto() {
     };
 
     document.body.style.cursor = 'wait';
-    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevoGasto) });
-    alert("Gasto restado del balance.");
-    location.reload();
+    try {
+        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevoGasto) });
+        mostrarToast("Gasto registrado correctamente.", 'success');
+        location.reload();
+    } catch (error) {
+        mostrarToast('Error al registrar el gasto.', 'danger');
+        if (btn) desbloquearBoton(btn);
+    } finally {
+        document.body.style.cursor = 'default';
+    }
 }
 
 function renderizarGastos() {
@@ -234,8 +372,8 @@ const costoNum = parseNumber(joya.costo);
                                 ${!esCliente ? `
                                     <p class="small mb-0 w-100 ${joya.stock < 5 ? 'text-danger' : 'text-success'}">Stock: ${joya.stock}</p>
                                     <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick="prepararEdicion(${joya.id})">✏️</button>
-                                    <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" onclick="sumarStock(${joya.id}, '${nombreEscapado}')">+</button>
-                                    <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" onclick="eliminarProducto(${joya.id}, '${nombreEscapado}')">&times;</button>
+                                    <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold" onclick="sumarStock(${joya.id}, '${nombreEscapado}', this)">+</button>
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" onclick="eliminarProducto(${joya.id}, '${nombreEscapado}', this)">&times;</button>
                                 ` : ''}
                             </div>
                         </div>
@@ -261,21 +399,27 @@ function prepararEdicion(id) {
     const btn = document.getElementById('btnGuardar');
     btn.innerText = "Actualizar";
     btn.classList.replace('btn-pino', 'btn-warning');
-    btn.onclick = ejecutarEdicion;
+    btn.onclick = () => ejecutarEdicion(btn);
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-async function ejecutarEdicion() {
+async function ejecutarEdicion(btn) {
     const nombre = document.getElementById('nombreJoya').value;
     const costo = parseInt(document.getElementById('costoJoya').value);
     const precio = parseInt(document.getElementById('precioJoya').value);
     const stock = parseInt(document.getElementById('stockJoya').value);
     const nombreArchivo = document.getElementById('imagenJoya').value;
 
+    if (!nombre || isNaN(costo) || isNaN(precio) || isNaN(stock)) {
+        mostrarToast('Faltan datos para actualizar el producto.', 'warning');
+        return;
+    }
+    if (btn) bloquearBoton(btn, 'Actualizando...');
+
     const editado = {
         tipo: "EDITAR_PRODUCTO",
-        token: TOKEN, // <--- LLAVE AGREGADA
+        token: TOKEN,
         id: editandoId,
         nombre: nombre,
         categoria: document.getElementById('categoriaJoya').value,
@@ -287,12 +431,19 @@ async function ejecutarEdicion() {
     };
 
     document.body.style.cursor = 'wait';
-    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(editado) });
-    alert("Producto actualizado");
-    location.reload();
+    try {
+        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(editado) });
+        mostrarToast("Producto actualizado.", 'success');
+        location.reload();
+    } catch (error) {
+        mostrarToast('Error al actualizar el producto.', 'danger');
+        if (btn) desbloquearBoton(btn);
+    } finally {
+        document.body.style.cursor = 'default';
+    }
 }
 
-async function agregarProducto() {
+async function agregarProducto(btn) {
     const nombre = document.getElementById('nombreJoya').value;
     const categoria = document.getElementById('categoriaJoya').value;
     const material = document.getElementById('materialJoya').value;
@@ -302,23 +453,32 @@ async function agregarProducto() {
     const stock = parseInt(document.getElementById('stockJoya').value);
 
     if (!nombre || !categoria || !material || isNaN(costo) || isNaN(precio) || isNaN(stock)) {
-        return alert("Faltan datos.");
+        mostrarToast("Faltan datos.", 'warning');
+        return;
     }
+    if (btn) bloquearBoton(btn, 'Guardando...');
 
     let imagenData = nombreImagen ? "img/" + nombreImagen : "https://via.placeholder.com/400?text=Joyas";
 
     const nuevo = {
         tipo: "NUEVO_PRODUCTO",
-        token: TOKEN, // <--- LLAVE AGREGADA
+        token: TOKEN,
         id: Date.now(),
         nombre, categoria, material, costo, precio, stock,
         imagen: imagenData
     };
 
     document.body.style.cursor = 'wait';
-    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevo) });
-    alert("Producto guardado con éxito.");
-    location.reload();
+    try {
+        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevo) });
+        mostrarToast("Producto guardado con éxito.", 'success');
+        location.reload();
+    } catch (error) {
+        mostrarToast('Error al guardar el producto.', 'danger');
+        if (btn) desbloquearBoton(btn);
+    } finally {
+        document.body.style.cursor = 'default';
+    }
 }
 
 // --- VENTAS ---
@@ -331,20 +491,24 @@ function cargarSelectProductos() {
     });
 }
 
-function agregarAlCarrito() {
+function agregarAlCarrito(btn) {
     const id = parseInt(document.getElementById('seleccionarProducto').value);
     const cant = parseInt(document.getElementById('ventaCantidad').value);
 
     const p = inventario.find(i => i.id == id);
-    if (!p || isNaN(cant) || cant <= 0) return alert("Selecciona un producto y cantidad válida.");
+    if (!p || isNaN(cant) || cant <= 0) {
+        mostrarToast("Selecciona un producto y cantidad válida.", 'warning');
+        return;
+    }
+    if (cant > p.stock) {
+        mostrarToast("No hay suficiente stock.", 'warning');
+        return;
+    }
 
-    // Verificamos si hay stock suficiente antes de agregar al carrito
-    if (cant > p.stock) return alert("No hay suficiente stock.");
-
-    // Agregamos al carrito usando el precio original (sin regateo aquí)
+    if (btn) bloquearBoton(btn, 'Agregando...');
     carrito.push({ ...p, cantidad: cant, precioFinal: p.precio });
-
     renderizarCarrito();
+    if (btn) desbloquearBoton(btn);
 }
 
 function renderizarCarrito() {
@@ -373,13 +537,16 @@ function eliminarItem(index) {
     renderizarCarrito();
 }
 
-async function finalizarVenta() {
-    if (carrito.length === 0) return;
+async function finalizarVenta(btn) {
+    if (carrito.length === 0) {
+        mostrarToast('Agrega al menos un producto al carrito.', 'warning');
+        return;
+    }
+    if (btn) bloquearBoton(btn, 'Cerrando...');
 
     const subtotalVenta = carrito.reduce((s, i) => s + (i.precioFinal * i.cantidad), 0);
     const precioManual = parseInt(document.getElementById('precioFinalAjustado').value);
 
-    // El total final será el manual si existe, si no, el subtotal
     const totalFinal = (!isNaN(precioManual) && precioManual > 0) ? precioManual : subtotalVenta;
     const costoTotalVenta = carrito.reduce((s, i) => s + (i.costo * i.cantidad), 0);
 
@@ -396,9 +563,16 @@ async function finalizarVenta() {
     };
 
     document.body.style.cursor = 'wait';
-    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datosVenta) });
-    alert(`Venta cerrada por $${totalFinal.toLocaleString()}`);
-    location.reload();
+    try {
+        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datosVenta) });
+        mostrarToast(`Venta cerrada por $${totalFinal.toLocaleString()}`, 'success');
+        location.reload();
+    } catch (error) {
+        mostrarToast('Error al cerrar la venta.', 'danger');
+        if (btn) desbloquearBoton(btn);
+    } finally {
+        document.body.style.cursor = 'default';
+    }
 }
 
 async function cargarHeader() {
@@ -408,30 +582,64 @@ async function cargarHeader() {
     } catch (e) { console.log(e); }
 }
 
-async function sumarStock(id, nombre) {
-    const cantidad = prompt(`¿Cuántas unidades de "${nombre}" quieres agregar?`);
-    if (!cantidad || isNaN(cantidad) || parseInt(cantidad) <= 0) return;
+async function sumarStock(id, nombre, btn) {
+    if (btn) bloquearBoton(btn, 'Abriendo...');
+    const cantidad = await mostrarEntrada({
+        title: 'Agregar Stock',
+        body: `¿Cuántas unidades de "${nombre}" quieres agregar?`,
+        inputLabel: 'Cantidad',
+        confirmText: 'Agregar'
+    });
+    if (btn) desbloquearBoton(btn);
+    if (!cantidad) return;
+
     const data = {
         tipo: "SUMAR_STOCK",
-        token: TOKEN, // <--- LLAVE AGREGADA
+        token: TOKEN,
         id: id,
-        cantidad: parseInt(cantidad)
+        cantidad: cantidad
     };
+
     document.body.style.cursor = 'wait';
-    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-    location.reload();
+    try {
+        if (btn) bloquearBoton(btn, 'Guardando...');
+        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+        mostrarToast('Stock actualizado con éxito.', 'success');
+        location.reload();
+    } catch (error) {
+        mostrarToast('Error al actualizar el stock.', 'danger');
+        if (btn) desbloquearBoton(btn);
+    } finally {
+        document.body.style.cursor = 'default';
+    }
 }
 
-async function eliminarProducto(id, nombre) {
-    if (confirm(`¿Eliminar "${nombre}"?`)) {
-        const data = {
-            tipo: "ELIMINAR_PRODUCTO",
-            token: TOKEN, // <--- LLAVE AGREGADA
-            id: id
-        };
-        document.body.style.cursor = 'wait';
+async function eliminarProducto(id, nombre, btn) {
+    const confirmado = await mostrarConfirmacion({
+        title: 'Eliminar producto',
+        body: `¿Eliminar "${nombre}"?`,
+        confirmText: 'Sí, eliminar',
+        cancelText: 'Cancelar'
+    });
+    if (!confirmado) return;
+    if (btn) bloquearBoton(btn, 'Eliminando...');
+
+    const data = {
+        tipo: "ELIMINAR_PRODUCTO",
+        token: TOKEN,
+        id: id
+    };
+
+    document.body.style.cursor = 'wait';
+    try {
         await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+        mostrarToast('Producto eliminado.', 'success');
         location.reload();
+    } catch (error) {
+        mostrarToast('Error al eliminar el producto.', 'danger');
+        if (btn) desbloquearBoton(btn);
+    } finally {
+        document.body.style.cursor = 'default';
     }
 }
 
