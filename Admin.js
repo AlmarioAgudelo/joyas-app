@@ -129,8 +129,8 @@ function calcularBalance() {
     ventasRealizadas.forEach(v => {
         totalVentasBrutas += parseFloat(v.total) || 0;
 
-        // CORRECCIÓN AQUÍ: Leemos todas las posibles variantes de nombre que envía el Excel
-        let cVenta = parseFloat(v.costototal) || parseFloat(v.costoTotal) || parseFloat(v.costo_total) || 0;
+        // El campo de costo en las ventas se llama "costo"
+        let cVenta = parseFloat(v.costo) || 0;
         totalCostosVendido += cVenta;
     });
 
