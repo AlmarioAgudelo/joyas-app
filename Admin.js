@@ -248,26 +248,43 @@ function cargarSelectProductos() {
 function agregarAlCarrito() {
     const id = parseInt(document.getElementById('seleccionarProducto').value);
     const cant = parseInt(document.getElementById('ventaCantidad').value);
-    const regateo = parseInt(document.getElementById('precioRegateo').value);
+
     const p = inventario.find(i => i.id == id);
-    if (!p || isNaN(cant)) return alert("Error");
-    const precioFinal = !isNaN(regateo) ? regateo : p.precio;
-    carrito.push({ ...p, cantidad: cant, precioFinal: precioFinal });
-    document.getElementById('precioRegateo').value = '';
+    if (!p || isNaN(cant) || cant <= 0) return alert("Selecciona un producto y cantidad válida.");
+
+    // Verificamos si hay stock suficiente antes de agregar al carrito
+    if (cant > p.stock) return alert("No hay suficiente stock.");
+
+    // Agregamos al carrito usando el precio original (sin regateo aquí)
+    carrito.push({ ...p, cantidad: cant, precioFinal: p.precio });
+
     renderizarCarrito();
 }
 
 function renderizarCarrito() {
     const lista = document.getElementById('listaCarrito');
+    const inputDescuento = document.getElementById('descuentoVenta');
     if (!lista) return;
-    let total = 0;
+
+    let subtotal = 0;
     lista.innerHTML = '';
+
     carrito.forEach((item, index) => {
         const sub = item.precioFinal * item.cantidad;
-        total += sub;
-        lista.innerHTML += `<tr><td>${item.nombre}</td><td>${item.cantidad}</td><td>$${sub.toLocaleString()}</td><td><button class="btn btn-sm text-danger" onclick="eliminarItem(${index})">x</button></td></tr>`;
+        subtotal += sub;
+        lista.innerHTML += `
+            <tr>
+                <td>${item.nombre}</td>
+                <td>x${item.cantidad}</td>
+                <td>$${sub.toLocaleString()}</td>
+                <td><button class="btn btn-sm text-danger" onclick="eliminarItem(${index})">×</button></td>
+            </tr>`;
     });
-    document.getElementById('totalVenta').innerText = `Total: $${total.toLocaleString()}`;
+
+    const descuento = parseInt(inputDescuento.value) || 0;
+    const totalFinal = subtotal - descuento;
+
+    document.getElementById('totalVenta').innerText = `Total: $${totalFinal.toLocaleString()}`;
 }
 
 function eliminarItem(index) {
@@ -276,25 +293,40 @@ function eliminarItem(index) {
 }
 
 async function finalizarVenta() {
-    if (carrito.length === 0) return;
+    if (carrito.length === 0) return alert("El carrito está vacío.");
+
+    const inputDescuento = document.getElementById('descuentoVenta').value;
+    const descuento = parseInt(inputDescuento) || 0;
+
     const costoTotalVenta = carrito.reduce((s, i) => s + (i.costo * i.cantidad), 0);
-    const totalVenta = carrito.reduce((s, i) => s + (i.precioFinal * i.cantidad), 0);
+    const subtotalVenta = carrito.reduce((s, i) => s + (i.precioFinal * i.cantidad), 0);
+    const totalFinal = subtotalVenta - descuento;
+
+    if (totalFinal < 0) return alert("El descuento no puede ser mayor al total.");
 
     const datosVenta = {
         tipo: "VENTA",
-        token: TOKEN, // <--- LLAVE AGREGADA
+        token: TOKEN,
         fecha: new Date().toLocaleString(),
         cliente: document.getElementById('clienteNombre').value || "General",
         telefono: document.getElementById('clienteTel').value || "---",
         productos: carrito.map(p => `${p.nombre} (x${p.cantidad})`).join(", "),
-        total: totalVenta,
-        costoTotal: costoTotalVenta,
+        total: totalFinal, // Este valor es el que irá a la columna de Ventas en el balance
+        costoTotal: costoTotalVenta, // Este valor mantiene la inversión real para el balance
         detalles: carrito.map(p => ({ id: p.id, cantidad: p.cantidad }))
     };
+
+    if (!confirm(`¿Cerrar venta por $${totalFinal.toLocaleString()}?`)) return;
+
     document.body.style.cursor = 'wait';
-    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datosVenta) });
-    alert("Venta Exitosa");
-    location.reload();
+    try {
+        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datosVenta) });
+        alert("Venta Exitosa");
+        location.reload();
+    } catch (e) {
+        alert("Error al guardar la venta");
+        document.body.style.cursor = 'default';
+    }
 }
 
 async function cargarHeader() {

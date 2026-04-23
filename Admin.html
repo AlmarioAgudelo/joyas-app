@@ -98,10 +98,10 @@
 
                         <select id="seleccionarProducto" class="form-select mb-2"></select>
                         <div class="row g-2 mb-2">
-                            <div class="col-6"><input type="number" id="ventaCantidad" class="form-control" value="1">
+                            <div class="col-12">
+                                <input type="number" id="ventaCantidad" class="form-control" value="1"
+                                    placeholder="Cantidad">
                             </div>
-                            <div class="col-6"><input type="number" id="precioRegateo" class="form-control"
-                                    placeholder="Precio Especial"></div>
                         </div>
                         <button class="btn btn-pino w-100" onclick="agregarAlCarrito()">+ Carrito</button>
                     </div>
@@ -111,6 +111,13 @@
                         <table class="table">
                             <tbody id="listaCarrito"></tbody>
                         </table>
+
+                        <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
+                            <span>Descuento Total:</span>
+                            <input type="number" id="descuentoVenta" class="form-control" style="width: 150px;"
+                                placeholder="$ 0" oninput="renderizarCarrito()">
+                        </div>
+
                         <h4 class="text-end" id="totalVenta">Total: $0</h4>
                         <button class="btn btn-success w-100" onclick="finalizarVenta()">Cerrar Venta</button>
                     </div>
