@@ -40,7 +40,7 @@ async function agregarGasto() {
     const desc = document.getElementById('gastoDesc').value;
     const monto = parseInt(document.getElementById('gastoMonto').value);
 
-    if (!desc || isNaN(monto)) return alert("Completa descripción y monto");
+    if (!desc || isNaN(monto)) return alert("Pon una descripción y el monto del gasto.");
 
     const nuevoGasto = {
         tipo: "NUEVO_GASTO",
@@ -52,7 +52,7 @@ async function agregarGasto() {
 
     document.body.style.cursor = 'wait';
     await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevoGasto) });
-    alert("Gasto registrado");
+    alert("Gasto restado del balance.");
     location.reload();
 }
 
@@ -60,8 +60,14 @@ function renderizarGastos() {
     const lista = document.getElementById('listaGastos');
     if (!lista) return;
     lista.innerHTML = '';
-    gastos.reverse().forEach(g => {
-        lista.innerHTML += `<tr><td>${g.fecha}</td><td>${g.descripcion}</td><td class="text-end text-danger">-$${parseInt(g.monto).toLocaleString()}</td></tr>`;
+    // Los mostramos del más nuevo al más viejo
+    [...gastos].reverse().forEach(g => {
+        lista.innerHTML += `
+            <tr>
+                <td style="font-size:0.75rem">${g.fecha.split(',')[0]}</td>
+                <td>${g.descripcion}</td>
+                <td class="text-end text-danger">-$${parseInt(g.monto).toLocaleString()}</td>
+            </tr>`;
     });
 }
 
@@ -112,23 +118,35 @@ function calcularBalance() {
     let invInversion = 0;
     let totalVentasBrutas = 0;
     let totalCostosVendido = 0;
-    let totalGastos = 0;
+    let sumaGastos = 0;
 
+    // Calcular inversión actual en estantes
     inventario.forEach(p => invInversion += (parseFloat(p.costo) || 0) * (parseInt(p.stock) || 0));
+
+    // Calcular ventas y lo que te costó lo que vendiste
     ventasRealizadas.forEach(v => {
         totalVentasBrutas += parseFloat(v.total) || 0;
         totalCostosVendido += parseFloat(v.costoTotal) || 0;
     });
-    gastos.forEach(g => totalGastos += parseFloat(g.monto) || 0);
 
-    // Ajustes solicitados:
-    const ventasNetas = totalVentasBrutas - totalGastos; // Gastos descuentan de ventas
-    const gananciaFinal = ventasNetas - totalCostosVendido; // Ganancia real
+    // Sumar todos los gastos registrados
+    gastos.forEach(g => sumaGastos += parseFloat(g.monto) || 0);
 
-    if (document.getElementById('balInversion')) document.getElementById('balInversion').innerText = `$${invInversion.toLocaleString()}`;
-    if (document.getElementById('balVentas')) document.getElementById('balVentas').innerText = `$${ventasNetas.toLocaleString()}`; // Ahora muestra neto
-    if (document.getElementById('balCostoVentas')) document.getElementById('balCostoVentas').innerText = `$${totalCostosVendido.toLocaleString()}`;
-    if (document.getElementById('balGanancia')) document.getElementById('balGanancia').innerText = `$${gananciaFinal.toLocaleString()}`;
+    // LÓGICA SOLICITADA:
+    // Ventas Netas = Todo lo vendido MENOS los gastos realizados
+    const ventasNetas = totalVentasBrutas - sumaGastos;
+    // Ganancia Real = Lo que te quedó de las ventas netas tras quitar el costo de fábrica
+    const gananciaReal = ventasNetas - totalCostosVendido;
+
+    // Actualizar la pantalla
+    document.getElementById('balInversion').innerText = `$${invInversion.toLocaleString()}`;
+    document.getElementById('balVentas').innerText = `$${ventasNetas.toLocaleString()}`;
+    document.getElementById('balCostoVentas').innerText = `$${totalCostosVendido.toLocaleString()}`;
+    document.getElementById('balGanancia').innerText = `$${gananciaReal.toLocaleString()}`;
+
+    // Si la ganancia es negativa, ponerla en rojo
+    const elGanancia = document.getElementById('balGanancia');
+    elGanancia.parentElement.className = gananciaReal < 0 ? "card p-4 bg-danger text-white text-center" : "card p-4 bg-primary text-white text-center";
 }
 
 function alternarCostos() {
