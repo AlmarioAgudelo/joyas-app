@@ -9,6 +9,7 @@ let carrito = [];
 let ventasRealizadas = [];
 let editandoId = null;
 let gastos = [];
+let vistaActual = 'inventario';
 
 function parseNumber(value) {
     if (value == null || value === '') return 0;
@@ -165,6 +166,9 @@ async function cargarDatos() {
         renderizarHistorial();
         renderizarGastos();
         calcularBalance();
+
+        const vistaGuardada = esCliente ? 'inventario' : localStorage.getItem('joyeria_admin_vista') || 'inventario';
+        cambiarVista(vistaGuardada);
     } catch (error) {
         console.error("Error cargando datos:", error);
     }
@@ -238,9 +242,10 @@ function renderizarGastos() {
 function cambiarVista(vista) {
     if (esCliente && vista !== 'inventario') return;
 
-    // Seleccionamos todas las secciones posibles
-    const secciones = ['vista-inventario', 'vista-ventas', 'vista-historial', 'vista-balance'];
+    vistaActual = vista;
+    localStorage.setItem('joyeria_admin_vista', vistaActual);
 
+    const secciones = ['vista-inventario', 'vista-ventas', 'vista-historial', 'vista-balance'];
     secciones.forEach(s => {
         const el = document.getElementById(s);
         if (el) {
@@ -264,9 +269,14 @@ function renderizarHistorial() {
     lista.innerHTML = '';
 
     [...ventasRealizadas].reverse().forEach(v => {
+        const partesFecha = String(v.fecha || '').split(',');
+        const dia = partesFecha[0] || '';
+        const hora = partesFecha[1] ? partesFecha[1].trim() : '';
+        const fechaHtml = hora ? `${dia}<br><small class="text-muted">${hora}</small>` : `${dia}`;
+
         lista.innerHTML += `
             <tr>
-                <td style="font-size: 0.8rem;">${v.fecha}</td>
+                <td style="font-size: 0.8rem; line-height: 1.2;">${fechaHtml}</td>
                 <td>
                     <div class="fw-bold">${v.cliente}</div>
                     <div class="text-muted small">${v.telefono || ''}</div>
@@ -615,7 +625,7 @@ async function sumarStock(id, nombre, btn) {
 }
 
 async function eliminarProducto(id, nombre, btn) {
-    const confirmado = await mostrarConfirmacion({
+    const confirmado = await mostrarModal({
         title: 'Eliminar producto',
         body: `¿Eliminar "${nombre}"?`,
         confirmText: 'Sí, eliminar',
@@ -643,5 +653,8 @@ async function eliminarProducto(id, nombre, btn) {
     }
 }
 
-cargarHeader();
-cargarDatos();
+async function init() {
+    await cargarHeader();
+    await cargarDatos();
+}
+init();
