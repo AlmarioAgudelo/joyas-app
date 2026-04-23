@@ -120,31 +120,28 @@ function calcularBalance() {
     let totalCostosVendido = 0;
     let sumaGastos = 0;
 
-    // Calcular inversión actual en estantes
+    // 1. Inversión Stock: Suma de (Costo * Stock) de lo que hay en estantes.
     inventario.forEach(p => invInversion += (parseFloat(p.costo) || 0) * (parseInt(p.stock) || 0));
 
-    // Calcular ventas y lo que te costó lo que vendiste
+    // 2. Ventas Totales y Costos de lo Vendido:
     ventasRealizadas.forEach(v => {
-        totalVentasBrutas += parseFloat(v.total) || 0;
-        totalCostosVendido += parseFloat(v.costoTotal) || 0;
+        totalVentasBrutas += parseFloat(v.total) || 0;       // El dinero total que entró de ventas
+        totalCostosVendido += parseFloat(v.costoTotal) || 0; // Lo que te costaron esas piezas vendidas
     });
 
-    // Sumar todos los gastos registrados
+    // 3. Gastos: Suma de todos los gastos registrados (comida, transporte, etc.)
     gastos.forEach(g => sumaGastos += parseFloat(g.monto) || 0);
 
-    // LÓGICA SOLICITADA:
-    // Ventas Netas = Todo lo vendido MENOS los gastos realizados
-    const ventasNetas = totalVentasBrutas - sumaGastos;
-    // Ganancia Real = Lo que te quedó de las ventas netas tras quitar el costo de fábrica
-    const gananciaReal = ventasNetas - totalCostosVendido;
+    // 4. Ganancia Real: Ventas Totales - Costo de lo Vendido - Gastos
+    const gananciaReal = totalVentasBrutas - totalCostosVendido - sumaGastos;
 
-    // Actualizar la pantalla
+    // Actualizar la pantalla con tus definiciones
     document.getElementById('balInversion').innerText = `$${invInversion.toLocaleString()}`;
-    document.getElementById('balVentas').innerText = `$${ventasNetas.toLocaleString()}`;
+    document.getElementById('balVentas').innerText = `$${totalVentasBrutas.toLocaleString()}`;
     document.getElementById('balCostoVentas').innerText = `$${totalCostosVendido.toLocaleString()}`;
     document.getElementById('balGanancia').innerText = `$${gananciaReal.toLocaleString()}`;
 
-    // Si la ganancia es negativa, ponerla en rojo
+    // Color de la tarjeta según si hay ganancia o pérdida
     const elGanancia = document.getElementById('balGanancia');
     elGanancia.parentElement.className = gananciaReal < 0 ? "card p-4 bg-danger text-white text-center" : "card p-4 bg-primary text-white text-center";
 }
