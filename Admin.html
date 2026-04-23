@@ -113,10 +113,11 @@
                         </table>
 
                         <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
-                            <span>Descuento Total:</span>
-                            <input type="number" id="descuentoVenta" class="form-control" style="width: 150px;"
-                                placeholder="$ 0" oninput="renderizarCarrito()">
+                            <span>Precio Final (Ajustado):</span>
+                            <input type="number" id="precioFinalAjustado" class="form-control" style="width: 150px;"
+                                placeholder="Total Venta" oninput="renderizarCarrito()">
                         </div>
+                        <h4 class="text-end" id="totalVentaDisplay">Total: $0</h4>
 
                         <h4 class="text-end" id="totalVenta">Total: $0</h4>
                         <button class="btn btn-success w-100" onclick="finalizarVenta()">Cerrar Venta</button>
@@ -172,6 +173,38 @@
                 </div>
             </div>
         </section>
+
+        <section id="vista-gastos" class="hidden">
+            <div class="card shadow-sm p-3 mb-4">
+                <h5>Registrar Nuevo Gasto</h5>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <input type="text" id="gastoDesc" class="form-control"
+                            placeholder="Descripción (ej: Publicidad, Empaques)">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" id="gastoMonto" class="form-control" placeholder="Monto $">
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-danger w-100" onclick="agregarGasto()">Registrar Gasto</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow-sm p-3">
+                <h5>Historial de Gastos</h5>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th class="text-end">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaGastos"></tbody>
+                </table>
+            </div>
+        </section>
+
     </div>
 
     <script src="Admin.js"></script>

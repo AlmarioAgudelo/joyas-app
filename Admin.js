@@ -1,4 +1,4 @@
-const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzzICRBYCAA9FoMnmSYRO08hqVSt4og7355164ttlzapuglBgmFnx5_0DlCEwBj4NSFwg/exec"; // REEMPLAZA CON TU URL
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbz_csuM93JFRcvqe6mlI9LAdwmDNxD_T5sU2jD_Id3yt5iNJAI5AhYYmEXEPdA6lPOOfQ/exec"; // REEMPLAZA CON TU URL
 const TOKEN = "ALPEZ_2026_SEGURIDAD_99"; // ESTE TOKEN DEBE SER IGUAL AL QUE PUSISTE EN EL GOOGLE SCRIPT
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -8,6 +8,7 @@ let inventario = [];
 let carrito = [];
 let ventasRealizadas = [];
 let editandoId = null;
+let gastos = [];
 
 // --- CARGA DE DATOS ---
 async function cargarDatos() {
@@ -17,6 +18,7 @@ async function cargarDatos() {
 
         inventario = datos.inventario;
         ventasRealizadas = datos.ventas;
+        gastos = datos.gastos || [];
 
         renderizarInventario();
         if (esCliente) {
@@ -27,10 +29,40 @@ async function cargarDatos() {
             if (btnCostos) btnCostos.style.display = 'none';
         }
         renderizarHistorial();
+        renderizarGastos();
         calcularBalance();
     } catch (error) {
         console.error("Error cargando datos:", error);
     }
+}
+
+async function agregarGasto() {
+    const desc = document.getElementById('gastoDesc').value;
+    const monto = parseInt(document.getElementById('gastoMonto').value);
+
+    if (!desc || isNaN(monto)) return alert("Completa descripción y monto");
+
+    const nuevoGasto = {
+        tipo: "NUEVO_GASTO",
+        token: TOKEN,
+        fecha: new Date().toLocaleString(),
+        descripcion: desc,
+        monto: monto
+    };
+
+    document.body.style.cursor = 'wait';
+    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(nuevoGasto) });
+    alert("Gasto registrado");
+    location.reload();
+}
+
+function renderizarGastos() {
+    const lista = document.getElementById('listaGastos');
+    if (!lista) return;
+    lista.innerHTML = '';
+    gastos.reverse().forEach(g => {
+        lista.innerHTML += `<tr><td>${g.fecha}</td><td>${g.descripcion}</td><td class="text-end text-danger">-$${parseInt(g.monto).toLocaleString()}</td></tr>`;
+    });
 }
 
 // --- NAVEGACIÓN ---
@@ -78,22 +110,25 @@ function renderizarHistorial() {
 
 function calcularBalance() {
     let invInversion = 0;
-    let totalVentas = 0;
-    let totalCostos = 0;
+    let totalVentasBrutas = 0;
+    let totalCostosVendido = 0;
+    let totalGastos = 0;
 
     inventario.forEach(p => invInversion += (parseFloat(p.costo) || 0) * (parseInt(p.stock) || 0));
-
     ventasRealizadas.forEach(v => {
-        totalVentas += parseFloat(v.total) || 0;
-        totalCostos += parseFloat(v.costo) || 0;
+        totalVentasBrutas += parseFloat(v.total) || 0;
+        totalCostosVendido += parseFloat(v.costoTotal) || 0;
     });
+    gastos.forEach(g => totalGastos += parseFloat(g.monto) || 0);
 
-    const ganancia = totalVentas - totalCostos;
+    // Ajustes solicitados:
+    const ventasNetas = totalVentasBrutas - totalGastos; // Gastos descuentan de ventas
+    const gananciaFinal = ventasNetas - totalCostosVendido; // Ganancia real
 
     if (document.getElementById('balInversion')) document.getElementById('balInversion').innerText = `$${invInversion.toLocaleString()}`;
-    if (document.getElementById('balVentas')) document.getElementById('balVentas').innerText = `$${totalVentas.toLocaleString()}`;
-    if (document.getElementById('balCostoVentas')) document.getElementById('balCostoVentas').innerText = `$${totalCostos.toLocaleString()}`;
-    if (document.getElementById('balGanancia')) document.getElementById('balGanancia').innerText = `$${ganancia.toLocaleString()}`;
+    if (document.getElementById('balVentas')) document.getElementById('balVentas').innerText = `$${ventasNetas.toLocaleString()}`; // Ahora muestra neto
+    if (document.getElementById('balCostoVentas')) document.getElementById('balCostoVentas').innerText = `$${totalCostosVendido.toLocaleString()}`;
+    if (document.getElementById('balGanancia')) document.getElementById('balGanancia').innerText = `$${gananciaFinal.toLocaleString()}`;
 }
 
 function alternarCostos() {
@@ -263,28 +298,23 @@ function agregarAlCarrito() {
 
 function renderizarCarrito() {
     const lista = document.getElementById('listaCarrito');
-    const inputDescuento = document.getElementById('descuentoVenta');
+    const inputPrecioFinal = document.getElementById('precioFinalAjustado');
     if (!lista) return;
 
-    let subtotal = 0;
+    let subtotalReal = 0;
     lista.innerHTML = '';
 
     carrito.forEach((item, index) => {
         const sub = item.precioFinal * item.cantidad;
-        subtotal += sub;
-        lista.innerHTML += `
-            <tr>
-                <td>${item.nombre}</td>
-                <td>x${item.cantidad}</td>
-                <td>$${sub.toLocaleString()}</td>
-                <td><button class="btn btn-sm text-danger" onclick="eliminarItem(${index})">×</button></td>
-            </tr>`;
+        subtotalReal += sub;
+        lista.innerHTML += `<tr><td>${item.nombre}</td><td>x${item.cantidad}</td><td>$${sub.toLocaleString()}</td><td><button class="btn btn-sm text-danger" onclick="eliminarItem(${index})">x</button></td></tr>`;
     });
 
-    const descuento = parseInt(inputDescuento.value) || 0;
-    const totalFinal = subtotal - descuento;
+    // Si el usuario puso un precio manual, usamos ese. Si no, el subtotal.
+    const precioManual = parseInt(inputPrecioFinal.value);
+    const totalAMostrar = (!isNaN(precioManual) && precioManual > 0) ? precioManual : subtotalReal;
 
-    document.getElementById('totalVenta').innerText = `Total: $${totalFinal.toLocaleString()}`;
+    document.getElementById('totalVentaDisplay').innerText = `Total: $${totalAMostrar.toLocaleString()}`;
 }
 
 function eliminarItem(index) {
@@ -293,16 +323,14 @@ function eliminarItem(index) {
 }
 
 async function finalizarVenta() {
-    if (carrito.length === 0) return alert("El carrito está vacío.");
+    if (carrito.length === 0) return;
 
-    const inputDescuento = document.getElementById('descuentoVenta').value;
-    const descuento = parseInt(inputDescuento) || 0;
-
-    const costoTotalVenta = carrito.reduce((s, i) => s + (i.costo * i.cantidad), 0);
     const subtotalVenta = carrito.reduce((s, i) => s + (i.precioFinal * i.cantidad), 0);
-    const totalFinal = subtotalVenta - descuento;
+    const precioManual = parseInt(document.getElementById('precioFinalAjustado').value);
 
-    if (totalFinal < 0) return alert("El descuento no puede ser mayor al total.");
+    // El total final será el manual si existe, si no, el subtotal
+    const totalFinal = (!isNaN(precioManual) && precioManual > 0) ? precioManual : subtotalVenta;
+    const costoTotalVenta = carrito.reduce((s, i) => s + (i.costo * i.cantidad), 0);
 
     const datosVenta = {
         tipo: "VENTA",
@@ -311,22 +339,15 @@ async function finalizarVenta() {
         cliente: document.getElementById('clienteNombre').value || "General",
         telefono: document.getElementById('clienteTel').value || "---",
         productos: carrito.map(p => `${p.nombre} (x${p.cantidad})`).join(", "),
-        total: totalFinal, // Este valor es el que irá a la columna de Ventas en el balance
-        costoTotal: costoTotalVenta, // Este valor mantiene la inversión real para el balance
+        total: totalFinal,
+        costoTotal: costoTotalVenta,
         detalles: carrito.map(p => ({ id: p.id, cantidad: p.cantidad }))
     };
 
-    if (!confirm(`¿Cerrar venta por $${totalFinal.toLocaleString()}?`)) return;
-
     document.body.style.cursor = 'wait';
-    try {
-        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datosVenta) });
-        alert("Venta Exitosa");
-        location.reload();
-    } catch (e) {
-        alert("Error al guardar la venta");
-        document.body.style.cursor = 'default';
-    }
+    await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datosVenta) });
+    alert(`Venta cerrada por $${totalFinal.toLocaleString()}`);
+    location.reload();
 }
 
 async function cargarHeader() {
