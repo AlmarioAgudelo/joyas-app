@@ -4,22 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joyas App - Gestión</title>
+    <title>Joyería Alpez - Catálogo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .bg-pino,
-        .bg-corporativo {
+        .bg-pino {
             background-color: #062e26 !important;
         }
 
-        .btn-pino {
-            background-color: #062e26 !important;
-            border-color: #062e26 !important;
-            color: white !important;
-        }
-
-        .btn-pino:hover {
-            background-color: #016331 !important;
+        .header-cliente {
+            background-color: #062e26;
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .img-cuadrada {
@@ -31,191 +29,103 @@
 
         .card-joya {
             transition: transform 0.2s;
-            font-size: 0.85rem;
             border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
         .card-joya:hover {
             transform: scale(1.03);
         }
 
-        .hidden {
-            display: none;
-        }
-
-        .nav-link {
-            color: rgba(255, 255, 255, 0.7);
-            cursor: pointer;
-        }
-
-        .nav-link.active {
-            color: white !important;
+        .precio-cliente {
+            color: #062e26;
             font-weight: bold;
+            font-size: 1.1rem;
         }
 
-        .navbar-dark .navbar-nav .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .navbar-dark .navbar-nav .nav-link.active {
-            color: #ffffff;
+        .material-tag {
+            color: #014421;
+            text-transform: uppercase;
+            font-weight: bold;
+            border-bottom: 2px solid #062e26;
+            padding-bottom: 5px;
+            margin-top: 2rem;
         }
     </style>
 </head>
 
 <body class="bg-light">
-    <div id="header-container"></div>
-    <div class="container">
-        <section id="vista-inventario">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Registrar Nueva Pieza</h5>
-                    <div class="row g-2">
-                        <div class="col-md-2"><input type="text" id="nombreJoya" class="form-control"
-                                placeholder="Nombre"></div>
 
-                        <div class="col-md-2">
-                            <select id="categoriaJoya" class="form-select">
-                                <option value="" selected disabled>Categoría</option>
-                                <option value="Cadena">Cadena</option>
-                                <option value="Aretes">Aretes</option>
-                                <option value="Pulseras">Pulseras</option>
-                                <option value="Balines">Balines</option>
-                                <option value="Herrajes">Herrajes</option>
-                            </select>
-                        </div>
+    <header class="header-cliente">
+        <h1 class="fw-bold">JOYERÍA ALPEZ</h1>
+        <p class="mb-0">Catálogo Exclusivo</p>
+    </header>
 
-                        <div class="col-md-2">
-                            <select id="materialJoya" class="form-select">
-                                <option value="" selected disabled>Material</option>
-                                <option value="Oro Laminado">Oro Laminado</option>
-                                <option value="Plata Ley 925">Plata Ley 925</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <input type="text" id="imagenJoya" class="form-control" placeholder="Ej: joya1.png">
-                        </div>
-                        <div class="col-md-1"><input type="number" id="costoJoya" class="form-control"
-                                placeholder="Costo"></div>
-                        <div class="col-md-1"><input type="number" id="precioJoya" class="form-control"
-                                placeholder="Venta"></div>
-                        <div class="col-md-1"><input type="number" id="stockJoya" class="form-control"
-                                placeholder="Cant."></div>
-                        <div class="col-md-2" id="contenedor-boton-guardar">
-                            <button class="btn btn-pino w-100" id="btnGuardar"
-                                onclick="agregarProducto()">Guardar</button>
-                        </div>
-                    </div>
+    <div class="container mb-5">
+        <div id="contenedorCatalogo" class="row">
+            <div class="text-center mt-5">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Cargando...</span>
                 </div>
+                <p class="mt-2">Cargando catálogo...</p>
             </div>
-            <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
-                <h3>Inventario Disponible</h3>
-                <button class="btn btn-sm btn-outline-secondary" onclick="alternarCostos()">
-                    <span id="btnVisibilidad">👁️ Mostrar Costos</span>
-                </button>
-            </div>
-            <div class="row" id="contenedorInventario"></div>
-        </section>
-
-        <section id="vista-ventas" class="hidden">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-body">
-                            <h5>Datos del Cliente</h5>
-                            <input type="text" id="clienteNombre" class="form-control mb-2" placeholder="Nombre">
-                            <input type="text" id="clienteTel" class="form-control mb-3" placeholder="Teléfono">
-                            <hr>
-                            <h5>Agregar a la Venta</h5>
-                            <select id="seleccionarProducto" class="form-select mb-2"></select>
-                            <div class="row g-2 mb-2">
-                                <div class="col-6">
-                                    <label class="small text-muted">Cantidad</label>
-                                    <input type="number" id="ventaCantidad" class="form-control" value="1" min="1">
-                                </div>
-                                <div class="col-6">
-                                    <label class="small text-muted">Precio Regateo</label>
-                                    <input type="number" id="precioRegateo" class="form-control" placeholder="$">
-                                </div>
-                            </div>
-                            <button class="btn btn-pino w-100" onclick="agregarAlCarrito()">Agregar al Carrito</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-7">
-                    <div class="card shadow-sm p-3">
-                        <h5>Carrito</h5>
-                        <table class="table align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th>Cant.</th>
-                                    <th>Subtotal</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody id="listaCarrito"></tbody>
-                        </table>
-                        <h4 class="text-end" id="totalVenta">Total: $0</h4>
-                        <button class="btn btn-success w-100 mt-3" onclick="finalizarVenta()">Finalizar Venta</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="vista-historial" class="hidden">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3>Historial de Ventas</h3>
-            </div>
-            <div class="card shadow-sm">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Cliente</th>
-                                <th>Productos</th>
-                                <th class="text-end">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="listaHistorial"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <section id="vista-balance" class="hidden">
-            <h3 class="mb-4">Resumen Financiero</h3>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="card bg-pino text-white shadow-sm border-0 p-3">
-                        <small>Inversión en Inventario</small>
-                        <h3 id="balInversion">$0</h3>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-success text-white shadow-sm border-0 p-3">
-                        <small>Ventas Totales</small>
-                        <h3 id="balVentas">$0</h3>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-secondary text-white shadow-sm border-0 p-3">
-                        <small>Costo de lo Vendido</small>
-                        <h3 id="balCostoVentas">$0</h3>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-primary text-white shadow-sm border-0 p-3">
-                        <small>Ganancia Real</small>
-                        <h3 id="balGanancia">$0</h3>
-                    </div>
-                </div>
-            </div>
-        </section>
+        </div>
     </div>
-    <script src="app.js"></script>
+
+    <script>
+        // PEGA AQUÍ TU URL DE GOOGLE SCRIPT
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzzICRBYCAA9FoMnmSYRO08hqVSt4og7355164ttlzapuglBgmFnx5_0DlCEwBj4NSFwg/exec";
+
+        async function cargarCatalogo() {
+            try {
+                const respuesta = await fetch(URL_SCRIPT);
+                const datos = await respuesta.json();
+                const inventario = datos.inventario;
+                renderizar(inventario);
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('contenedorCatalogo').innerHTML = "<p class='text-center'>Error al cargar el catálogo.</p>";
+            }
+        }
+
+        function renderizar(inventario) {
+            const contenedor = document.getElementById('contenedorCatalogo');
+            contenedor.innerHTML = '';
+
+            // Sacamos los materiales para agrupar
+            const materiales = [...new Set(inventario.map(j => j.material || "Otros"))];
+
+            materiales.forEach(mat => {
+                // Solo mostrar joyas con stock mayor a 0 para el cliente
+                const joyas = inventario.filter(j => j.material === mat && parseInt(j.stock) > 0);
+
+                if (joyas.length > 0) {
+                    contenedor.innerHTML += `
+                        <div class="col-12">
+                            <h4 class="material-tag">✨ ${mat}</h4>
+                        </div>`;
+
+                    joyas.forEach(joya => {
+                        const precio = parseInt(joya.precio) || 0;
+                        contenedor.innerHTML += `
+                            <div class="col-6 col-md-3 mb-4">
+                                <div class="card card-joya h-100">
+                                    <img src="${joya.imagen || 'https://via.placeholder.com/400?text=Joya'}" class="img-cuadrada">
+                                    <div class="card-body text-center p-3">
+                                        <h6 class="mb-1 text-truncate">${joya.nombre}</h6>
+                                        <p class="precio-cliente mb-0">$${precio.toLocaleString()}</p>
+                                        <small class="text-muted">${joya.categoria}</small>
+                                    </div>
+                                </div>
+                            </div>`;
+                    });
+                }
+            });
+        }
+
+        cargarCatalogo();
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
