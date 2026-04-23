@@ -37,12 +37,15 @@ async function cargarDatos() {
 function cambiarVista(vista) {
     if (esCliente && vista !== 'inventario') return;
 
-    document.getElementById('vista-inventario').classList.toggle('hidden', vista !== 'inventario');
-    document.getElementById('vista-ventas').classList.toggle('hidden', vista !== 'ventas');
-    document.getElementById('vista-historial').classList.toggle('hidden', vista !== 'historial');
+    // Seleccionamos todas las secciones posibles
+    const secciones = ['vista-inventario', 'vista-ventas', 'vista-historial', 'vista-balance'];
 
-    const vistaBalance = document.getElementById('vista-balance');
-    if (vistaBalance) vistaBalance.classList.toggle('hidden', vista !== 'balance');
+    secciones.forEach(s => {
+        const el = document.getElementById(s);
+        if (el) {
+            el.classList.toggle('hidden', s !== `vista-${vista}`);
+        }
+    });
 
     const links = ["inv", "ventas", "historial", "balance"];
     links.forEach(l => {

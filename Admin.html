@@ -82,7 +82,8 @@
 
             <div class="d-flex justify-content-between mb-3">
                 <h3>Inventario Real</h3>
-                <button class="btn btn-sm btn-outline-secondary" onclick="alternarCostos()">👁️ Ver Costos</button>
+                <button id="btnVisibilidad" class="btn btn-sm btn-outline-secondary" onclick="alternarCostos()">👁️ Ver
+                    Costos</button>
             </div>
             <div class="row" id="contenedorInventario"></div>
         </section>
@@ -117,23 +118,48 @@
 
         <section id="vista-balance" class="hidden text-center">
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card p-4 bg-pino text-white">
                         <h5>Inversión</h5>
                         <h2 id="balInversion">$0</h2>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <div class="card p-4 bg-secondary text-white">
+                        <h5>Costo Vendido</h5>
+                        <h2 id="balCostoVentas">$0</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <div class="card p-4 bg-success text-white">
                         <h5>Ventas</h5>
                         <h2 id="balVentas">$0</h2>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card p-4 bg-primary text-white">
                         <h5>Ganancia</h5>
                         <h2 id="balGanancia">$0</h2>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="vista-historial" class="hidden">
+            <div class="card shadow-sm p-3">
+                <h5>Historial de Ventas</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Productos</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaHistorial"></tbody>
+                    </table>
                 </div>
             </div>
         </section>
