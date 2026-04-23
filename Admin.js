@@ -10,6 +10,13 @@ let ventasRealizadas = [];
 let editandoId = null;
 let gastos = [];
 
+function parseNumber(value) {
+    if (value == null || value === '') return 0;
+    if (typeof value === 'number') return value;
+    const normalized = String(value).trim().replace(/\./g, '').replace(/,/g, '.');
+    return parseFloat(normalized) || 0;
+}
+
 // --- CARGA DE DATOS ---
 async function cargarDatos() {
     try {
@@ -69,6 +76,24 @@ function renderizarGastos() {
                 <td class="text-end text-danger">-$${parseInt(g.monto).toLocaleString()}</td>
             </tr>`;
     });
+
+    // Calcular total ventas y suma gastos para el total dinero disponible
+    let totalVentas = 0;
+    ventasRealizadas.forEach(v => {
+        totalVentas += parseFloat(v.total) || 0;
+    });
+    let sumaGastos = 0;
+    gastos.forEach(g => {
+        sumaGastos += parseFloat(g.monto) || 0;
+    });
+    const totalDinero = totalVentas - sumaGastos;
+
+    // Agregar fila del total dinero disponible
+    lista.innerHTML += `
+        <tr class="table-info">
+            <td colspan="2" class="fw-bold">Total Dinero Disponible</td>
+            <td class="text-end fw-bold text-success">$${Math.round(totalDinero).toLocaleString()}</td>
+        </tr>`;
 }
 
 // --- NAVEGACIÓN ---
@@ -108,7 +133,7 @@ function renderizarHistorial() {
                     <div class="fw-bold">${v.cliente}</div>
                     <div class="text-muted small">${v.telefono || ''}</div>
                 </td>
-                <td class="small text-truncate" style="max-width: 200px;">${v.productos}</td>
+                <td class="small">${v.productos.split(',').map(p => `<div>${p.trim()}</div>`).join('')}</td>
                 <td class="text-end fw-bold">$${parseInt(v.total).toLocaleString()}</td>
             </tr>`;
     });
@@ -122,21 +147,21 @@ function calcularBalance() {
 
     // 1. Inversión Stock Actual
     inventario.forEach(p => {
-        invInversion += (parseFloat(p.costo) || 0) * (parseInt(p.stock) || 0);
+        invInversion += parseNumber(p.costo) * parseNumber(p.stock);
     });
 
     // 2. Ventas y Costos de lo Vendido
     ventasRealizadas.forEach(v => {
-        totalVentasBrutas += parseFloat(v.total) || 0;
+        totalVentasBrutas += parseNumber(v.total);
 
         // El campo de costo en las ventas se llama "costo"
-        let cVenta = parseFloat(v.costo) || 0;
+        let cVenta = parseNumber(v.costo);
         totalCostosVendido += cVenta;
     });
 
     // 3. Gastos extras registrados
     gastos.forEach(g => {
-        sumaGastos += parseFloat(g.monto) || 0;
+        sumaGastos += parseNumber(g.monto);
     });
 
     // 4. OPERACIONES FINALES
@@ -185,8 +210,8 @@ function renderizarInventario() {
         });
 
         joyasFiltradas.forEach(joya => {
-            const costoNum = parseInt(joya.costo) || 0;
-            const precioNum = parseInt(joya.precio) || 0;
+const costoNum = parseNumber(joya.costo);
+        const precioNum = parseNumber(joya.precio);
             const urlImg = joya.imagen || "https://via.placeholder.com/400?text=Joyas";
             const nombreEscapado = joya.nombre.replace(/'/g, "\\'");
 
