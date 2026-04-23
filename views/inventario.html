@@ -1,0 +1,38 @@
+<section id="vista-inventario">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Registrar / Editar Pieza</h5>
+            <div class="row g-2">
+                <div class="col-md-2"><input type="text" id="nombreJoya" class="form-control" placeholder="Nombre"></div>
+                <div class="col-md-2">
+                    <select id="categoriaJoya" class="form-select">
+                        <option value="Cadena">Cadena</option>
+                        <option value="Aretes">Aretes</option>
+                        <option value="Pulseras">Pulseras</option>
+                        <option value="Balines">Balines</option>
+                        <option value="Herrajes">Herrajes</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="materialJoya" class="form-select">
+                        <option value="Oro Laminado">Oro Laminado</option>
+                        <option value="Plata Ley 925">Plata Ley 925</option>
+                    </select>
+                </div>
+                <div class="col-md-2"><input type="text" id="imagenJoya" class="form-control" placeholder="Imagen (anillo.png)"></div>
+                <div class="col-md-1"><input type="number" id="costoJoya" class="form-control" placeholder="Costo"></div>
+                <div class="col-md-1"><input type="number" id="precioJoya" class="form-control" placeholder="Venta"></div>
+                <div class="col-md-1"><input type="number" id="stockJoya" class="form-control" placeholder="Stock"></div>
+                <div class="col-md-1">
+                    <button class="btn btn-pino w-100" id="btnGuardar" onclick="agregarProducto(this)">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mb-3">
+        <h3>Inventario Real</h3>
+        <button id="btnVisibilidad" class="btn btn-sm btn-outline-secondary" onclick="alternarCostos()">👁️ Ver Costos</button>
+    </div>
+    <div class="row" id="contenedorInventario"></div>
+</section>

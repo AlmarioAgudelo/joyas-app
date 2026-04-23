@@ -1,0 +1,35 @@
+<section id="vista-ventas" class="hidden">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h5>Nueva Venta</h5>
+                <input type="text" id="clienteNombre" class="form-control mb-2" placeholder="Cliente">
+                <input type="text" id="clienteTel" class="form-control mb-2" placeholder="Teléfono">
+
+                <select id="seleccionarProducto" class="form-select mb-2"></select>
+                <div class="row g-2 mb-2">
+                    <div class="col-12">
+                        <input type="number" id="ventaCantidad" class="form-control" value="1" placeholder="Cantidad">
+                    </div>
+                </div>
+                <button class="btn btn-pino w-100" onclick="agregarAlCarrito(this)">+ Carrito</button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card p-3 shadow-sm">
+                <table class="table">
+                    <tbody id="listaCarrito"></tbody>
+                </table>
+
+                <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
+                    <span>Precio Final (Ajustado):</span>
+                    <input type="number" id="precioFinalAjustado" class="form-control" style="width: 150px;" placeholder="Total Venta" oninput="renderizarCarrito()">
+                </div>
+                <h4 class="text-end" id="totalVentaDisplay">Total: $0</h4>
+
+                <h4 class="text-end" id="totalVenta">Total: $0</h4>
+                <button class="btn btn-success w-100" onclick="finalizarVenta(this)">Cerrar Venta</button>
+            </div>
+        </div>
+    </div>
+</section>
