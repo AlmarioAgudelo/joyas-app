@@ -25,7 +25,15 @@
             </div>
         </div>
     </div>
-
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm p-4 bg-info text-white text-center">
+                <h6 class="mb-2">💰 Total Dinero Disponible</h6>
+                <p class="small mb-3">Este valor muestra el presupuesto real después de los gastos registrados.</p>
+                <h2 id="balDisponible">$0</h2>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-md-5">
             <div class="card shadow-sm p-3 mb-3 text-start">
@@ -39,11 +47,6 @@
                     <button class="btn btn-danger" onclick="agregarGasto(this)">Añadir</button>
                 </div>
                 <small class="text-muted">Esto se descontará del dinero disponible, no de la ganancia principal.</small>
-            </div>
-            <div class="card shadow-sm p-3 mb-3 text-start">
-                <h6>💰 Total Dinero Disponible</h6>
-                <p class="mb-2 small text-muted">Los gastos se restan aquí para mostrar cuánto presupuesto queda.</p>
-                <h2 id="balDisponible">$0</h2>
             </div>
         </div>
 
