@@ -10,6 +10,7 @@ let ventasRealizadas = [];
 let editandoId = null;
 let gastos = [];
 let vistaActual = 'inventario';
+let datosCargados = false;
 let config = {}; // NUEVO: Configuración global (versionInventario, etc.)
 
 function parseNumber(value) {
@@ -186,9 +187,10 @@ async function cargarDatos() {
         renderizarHistorial();
         renderizarGastos();
         calcularBalance();
+        datosCargados = true;
 
-        const vistaGuardada = esCliente ? 'inventario' : localStorage.getItem('joyeria_admin_vista') || 'inventario';
-        cambiarVista(vistaGuardada);
+        if (vistaActual === 'ventas') cargarSelectProductos();
+        if (vistaActual === 'balance') calcularBalance();
     } catch (error) {
         console.error('Error cargando datos:', error);
     }
@@ -214,13 +216,17 @@ function cambiarVista(vista) {
         if (el) el.classList.toggle('active', vista === (l === 'inv' ? 'inventario' : l));
     });
 
-    if (vista === 'ventas') cargarSelectProductos();
-    if (vista === 'balance') calcularBalance();
+    if (vista === 'ventas' && datosCargados) cargarSelectProductos();
+    if (vista === 'balance' && datosCargados) calcularBalance();
 }
 
 async function init() {
     await cargarHeader();
     await cargarVistas();
+
+    const vistaGuardada = esCliente ? 'inventario' : localStorage.getItem('joyeria_admin_vista') || 'inventario';
+    cambiarVista(vistaGuardada);
+
     await cargarDatos();
 }
 
