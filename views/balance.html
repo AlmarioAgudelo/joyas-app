@@ -38,7 +38,12 @@
                     <input type="number" id="gastoMonto" class="form-control" placeholder="Monto">
                     <button class="btn btn-danger" onclick="agregarGasto(this)">Añadir</button>
                 </div>
-                <small class="text-muted">Esto se descontará de las ventas y ganancias.</small>
+                <small class="text-muted">Esto se descontará del dinero disponible, no de la ganancia principal.</small>
+            </div>
+            <div class="card shadow-sm p-3 mb-3 text-start">
+                <h6>💰 Total Dinero Disponible</h6>
+                <p class="mb-2 small text-muted">Los gastos se restan aquí para mostrar cuánto presupuesto queda.</p>
+                <h2 id="balDisponible">$0</h2>
             </div>
         </div>
 

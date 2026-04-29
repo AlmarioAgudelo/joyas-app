@@ -51,13 +51,12 @@ function renderizarGastos() {
     gastos.forEach(g => {
         sumaGastos += parseNumber(g.monto);
     });
-    const totalDinero = totalVentas - sumaGastos;
+    const totalDisponible = totalVentas - sumaGastos;
 
-    lista.innerHTML += `
-        <tr class="table-info">
-            <td colspan="2" class="fw-bold">Total Dinero Disponible</td>
-            <td class="text-end fw-bold text-success">$${Math.round(totalDinero).toLocaleString()}</td>
-        </tr>`;
+    const balDisponible = document.getElementById('balDisponible');
+    if (balDisponible) {
+        balDisponible.innerText = `$${Math.round(totalDisponible).toLocaleString()}`;
+    }
 }
 
 function calcularBalance() {
@@ -79,12 +78,14 @@ function calcularBalance() {
         sumaGastos += parseNumber(g.monto);
     });
 
-    const gananciaReal = totalVentasBrutas - totalCostosVendido - sumaGastos;
+    const gananciaReal = totalVentasBrutas - totalCostosVendido;
+    const totalDisponible = totalVentasBrutas - sumaGastos;
 
     if (document.getElementById('balInversion')) document.getElementById('balInversion').innerText = `$${Math.round(invInversion).toLocaleString()}`;
     if (document.getElementById('balVentas')) document.getElementById('balVentas').innerText = `$${Math.round(totalVentasBrutas).toLocaleString()}`;
     if (document.getElementById('balCostoVentas')) document.getElementById('balCostoVentas').innerText = `$${Math.round(totalCostosVendido).toLocaleString()}`;
     if (document.getElementById('balGanancia')) document.getElementById('balGanancia').innerText = `$${Math.round(gananciaReal).toLocaleString()}`;
+    if (document.getElementById('balDisponible')) document.getElementById('balDisponible').innerText = `$${Math.round(totalDisponible).toLocaleString()}`;
 
     const elGanancia = document.getElementById('balGanancia');
     if (elGanancia) {

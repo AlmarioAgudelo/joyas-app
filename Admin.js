@@ -10,6 +10,7 @@ let ventasRealizadas = [];
 let editandoId = null;
 let gastos = [];
 let vistaActual = 'inventario';
+let config = {}; // NUEVO: Configuración global (versionInventario, etc.)
 
 function parseNumber(value) {
     if (value == null || value === '') return 0;
@@ -179,6 +180,7 @@ async function cargarDatos() {
         inventario = datos.inventario || [];
         ventasRealizadas = datos.ventas || [];
         gastos = datos.gastos || [];
+        config = datos.config || {}; // NUEVO: Cargar configuración global
 
         renderizarInventario();
         renderizarHistorial();
